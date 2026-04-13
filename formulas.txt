@@ -1,0 +1,2 @@
+pullback_strength = ((price - sma_20) / sma_20) * 100
+range_position = ((price - low_20) / (high_20 - low_20 + 1e-9)) * 100
