@@ -37,68 +37,74 @@ CRYPTO_KEYWORDS = {
 }
 
 st.markdown(
-    f"""
+    """
     <style>
-    .stApp {{
-        background: linear-gradient(180deg, {BG_TOP} 0%, {BG_BOTTOM} 100%);
-        color: {TEXT};
-    }}
-    .main-title {{
-        font-size: 2.25rem;
+
+    /* App background */
+    .stApp {
+        background: linear-gradient(180deg, #F7F1F4 0%, #EEF3FA 100%);
+        color: #111111;
+    }
+
+    /* Titles */
+    .main-title {
+        color: #111111;
+    }
+
+    .sub-title {
+        color: #444444;
+    }
+
+    /* Metric cards (THIS fixes your numbers) */
+    div[data-testid="stMetric"] {
+        background: #FFFFFF;
+        color: #000000 !important;
+        border-radius: 14px;
+        padding: 0.6rem;
+        border: 1px solid rgba(0,0,0,0.1);
+    }
+
+    /* Metric LABEL */
+    div[data-testid="stMetricLabel"] {
+        color: #333333 !important;
+        font-weight: 600;
+    }
+
+    /* Metric VALUE (RSI, price, etc) */
+    div[data-testid="stMetricValue"] {
+        color: #000000 !important;
         font-weight: 800;
-        color: {TEXT};
-        margin-bottom: 0.15rem;
-    }}
-    .sub-title {{
-        color: {MUTED};
-        margin-bottom: 1rem;
-        font-size: 1.02rem;
-    }}
-    .accent-card {{
-        background: linear-gradient(145deg, {CARD} 0%, {CARD_ALT} 100%);
-        border: 1px solid {BORDER};
-        border-left: 6px solid {BURGUNDY};
-        border-radius: 18px;
-        padding: 1rem 1.1rem;
-        margin-bottom: 0.8rem;
-        box-shadow: 0 10px 24px rgba(20, 24, 35, 0.08);
-    }}
-    .accent-card-soft {{
-        background: linear-gradient(145deg, #FFF8FB 0%, #FFFDF6 100%);
-        border: 1px solid rgba(122,31,69,0.14);
-        border-left: 6px solid {GOLD};
-        border-radius: 18px;
-        padding: 1rem 1.1rem;
-        margin-bottom: 0.8rem;
-        box-shadow: 0 10px 24px rgba(20, 24, 35, 0.06);
-    }}
-    .decision-buy {{
-        color: #176B3A;
-        font-weight: 800;
-    }}
-    .decision-watch {{
-        color: #8B5E00;
-        font-weight: 800;
-    }}
-    .decision-avoid {{
-        color: #A12A3A;
-        font-weight: 800;
-    }}
-    .small-note {{
-        color: {MUTED};
-        font-size: 0.95rem;
-    }}
-    div[data-testid="stMetric"] {{
-        background: linear-gradient(145deg, {CARD} 0%, {CARD_ALT} 100%);
-        border: 1px solid {BORDER};
-        padding: 0.55rem 0.8rem;
-        border-radius: 16px;
-        box-shadow: 0 8px 18px rgba(20, 24, 35, 0.05);
-    }}
-    section[data-testid="stSidebar"] {{
-        background: linear-gradient(180deg, #F6EAF0 0%, #F7F4FB 100%);
-        border-right: 1px solid rgba(122,31,69,0.10);
-    }}
+        font-size: 1.2rem;
+    }
+
+    /* Data table (THIS fixes washed out rows) */
+    .stDataFrame, .stDataFrame * {
+        color: #000000 !important;
+    }
+
+    /* Dropdown + inputs */
+    .stSelectbox, .stTextInput, .stTextArea {
+        color: #000000 !important;
+    }
+
+    /* Sidebar */
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #F3E4EA 0%, #F6F2F8 100%);
+    }
+
+    /* Cards */
+    .accent-card {
+        background: #FFFFFF;
+        border-left: 6px solid #7A1F45;
+        color: #000000;
+    }
+
+    .accent-card-soft {
+        background: #FFF9F0;
+        border-left: 6px solid #D6B35A;
+        color: #000000;
+    }
+
     </style>
     """,
     unsafe_allow_html=True,
