@@ -1,3 +1,4 @@
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -39,86 +40,161 @@ st.markdown(
     """
     <style>
     .stApp {
-        background: linear-gradient(180deg, #F7F1F4 0%, #EEF3FA 100%);
-        color: #111111;
+        background:
+            radial-gradient(circle at top left, rgba(255, 182, 92, 0.28) 0%, rgba(255, 182, 92, 0.02) 32%),
+            radial-gradient(circle at top right, rgba(255, 106, 136, 0.22) 0%, rgba(255, 106, 136, 0.03) 28%),
+            linear-gradient(180deg, #1f1029 0%, #34142f 24%, #5b2245 48%, #8a3b4a 72%, #f09a61 100%);
+        color: #fff7ef;
     }
 
     .main-title {
-        color: #111111;
+        color: #fff7ef;
         font-size: 2rem;
         font-weight: 800;
         margin-bottom: 0.15rem;
+        text-shadow: 0 0 14px rgba(255, 182, 92, 0.22);
     }
 
     .sub-title {
-        color: #444444;
+        color: #ffd7c0;
         margin-bottom: 1rem;
     }
 
     div[data-testid="stMetric"] {
-        background: #FFFFFF;
-        color: #000000 !important;
-        border-radius: 14px;
-        padding: 0.6rem;
-        border: 1px solid rgba(0,0,0,0.1);
+        background: linear-gradient(180deg, rgba(66, 25, 56, 0.92) 0%, rgba(37, 16, 46, 0.94) 100%);
+        color: #fff7ef !important;
+        border-radius: 18px;
+        padding: 0.75rem;
+        border: 1px solid rgba(255, 190, 120, 0.22);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
     }
 
     div[data-testid="stMetricLabel"] {
-        color: #333333 !important;
+        color: #ffd7c0 !important;
         font-weight: 600;
     }
 
     div[data-testid="stMetricValue"] {
-        color: #000000 !important;
+        color: #fff7ef !important;
         font-weight: 800;
         font-size: 1.2rem;
     }
 
     .stDataFrame, .stDataFrame * {
-        color: #000000 !important;
+        color: #fff7ef !important;
     }
 
-    .stSelectbox, .stTextInput, .stTextArea {
-        color: #000000 !important;
+    div[data-baseweb="select"] > div,
+    .stTextInput > div > div > input,
+    .stTextArea textarea {
+        background: rgba(42, 18, 49, 0.82) !important;
+        color: #fff7ef !important;
+        border: 1px solid rgba(255, 190, 120, 0.18) !important;
     }
 
     section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #F3E4EA 0%, #F6F2F8 100%);
+        background: linear-gradient(180deg, rgba(30, 15, 42, 0.98) 0%, rgba(58, 21, 50, 0.98) 48%, rgba(92, 36, 61, 0.98) 100%);
+        border-right: 1px solid rgba(255, 190, 120, 0.12);
     }
 
     .accent-card {
-        background: #FFFFFF;
-        border-left: 6px solid #7A1F45;
-        color: #000000;
-        border-radius: 14px;
-        padding: 0.9rem 1rem;
+        background: linear-gradient(180deg, rgba(70, 24, 57, 0.92) 0%, rgba(41, 17, 48, 0.95) 100%);
+        border-left: 6px solid #ff9f68;
+        color: #fff7ef;
+        border-radius: 18px;
+        padding: 0.95rem 1rem;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
     }
 
     .accent-card-soft {
-        background: #FFF9F0;
-        border-left: 6px solid #D6B35A;
-        color: #000000;
-        border-radius: 14px;
-        padding: 0.9rem 1rem;
+        background: linear-gradient(180deg, rgba(84, 34, 53, 0.92) 0%, rgba(47, 20, 49, 0.95) 100%);
+        border-left: 6px solid #ffd36e;
+        color: #fff7ef;
+        border-radius: 18px;
+        padding: 0.95rem 1rem;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
     }
 
     .decision-buy {
-        color: #126b3d;
+        color: #ffe88a;
         font-weight: 800;
+        text-shadow: 0 0 10px rgba(255, 232, 138, 0.55);
     }
 
     .decision-watch {
-        color: #8a5b00;
+        color: #ffd39f;
         font-weight: 800;
     }
 
     .decision-avoid {
-        color: #a11b2b;
+        color: #ff9ba6;
         font-weight: 800;
     }
 
     .small-note {
-        color: #4a4a4a;
+        color: #ffe7d7;
+    }
+
+    .signal-pill {
+        display: inline-block;
+        padding: 0.38rem 0.72rem;
+        border-radius: 999px;
+        font-size: 0.88rem;
+        font-weight: 800;
+        margin-bottom: 0.45rem;
+        letter-spacing: 0.01em;
+    }
+
+    .pill-strong-buy {
+        background: rgba(255, 224, 118, 0.16);
+        border: 1px solid rgba(255, 224, 118, 0.45);
+        color: #fff2a6;
+        box-shadow: 0 0 14px rgba(255, 224, 118, 0.62), 0 0 28px rgba(255, 172, 73, 0.28);
+    }
+
+    .pill-moderate-buy, .pill-buy {
+        background: rgba(255, 169, 94, 0.14);
+        border: 1px solid rgba(255, 169, 94, 0.42);
+        color: #ffd9a8;
+        box-shadow: 0 0 12px rgba(255, 169, 94, 0.42);
+    }
+
+    .pill-hold {
+        background: rgba(255, 209, 136, 0.10);
+        border: 1px solid rgba(255, 209, 136, 0.30);
+        color: #ffe0b0;
+    }
+
+    .pill-avoid {
+        background: rgba(255, 130, 146, 0.12);
+        border: 1px solid rgba(255, 130, 146, 0.28);
+        color: #ffbac3;
+    }
+
+    .setup-line {
+        background: linear-gradient(180deg, rgba(66, 25, 56, 0.75) 0%, rgba(37, 16, 46, 0.88) 100%);
+        border: 1px solid rgba(255, 190, 120, 0.16);
+        border-radius: 16px;
+        padding: 0.85rem 1rem;
+        margin-bottom: 0.6rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .setup-title {
+        color: #fff7ef;
+        font-weight: 800;
+        margin-bottom: 0.2rem;
+    }
+
+    .setup-note {
+        color: #ffd7c0;
+        font-size: 0.92rem;
+    }
+
+    .stAlert {
+        background: rgba(66, 25, 56, 0.80) !important;
+        color: #fff7ef !important;
+        border: 1px solid rgba(255, 190, 120, 0.20) !important;
     }
     </style>
     """,
@@ -300,6 +376,38 @@ def is_crypto_symbol(symbol: str) -> bool:
         return True
     token = upper.split("-")[0]
     return token in CRYPTO_KEYWORDS
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def validate_ticker(symbol: str) -> bool:
+    symbol = symbol.strip().upper()
+    if not symbol:
+        return False
+
+    try:
+        test = yf.download(symbol, period="5d", interval="1d", auto_adjust=True, progress=False)
+        if test is None or test.empty:
+            return False
+        if isinstance(test.columns, pd.MultiIndex):
+            test.columns = [c[0] for c in test.columns]
+        return "Close" in test.columns and test["Close"].dropna().shape[0] > 0
+    except Exception:
+        return False
+
+
+def signal_badge_html(decision: str, entry_quality: str = "") -> str:
+    decision_upper = str(decision).upper()
+    entry_upper = str(entry_quality).upper()
+
+    if decision_upper == "BUY" and entry_upper == "STRONG":
+        return '<span class="signal-pill pill-strong-buy">● Strong Buy</span>'
+    if decision_upper == "BUY" and entry_upper in {"MODERATE", "MIXED"}:
+        return '<span class="signal-pill pill-moderate-buy">● Moderate Buy</span>'
+    if decision_upper == "BUY":
+        return '<span class="signal-pill pill-buy">● Buy</span>'
+    if decision_upper == "HOLD / WAIT":
+        return '<span class="signal-pill pill-hold">● Hold / Wait</span>'
+    return '<span class="signal-pill pill-avoid">● Avoid</span>'
 
 
 def label_strength(score: float) -> str:
@@ -582,7 +690,7 @@ def decision_class(decision: str) -> str:
     return "decision-avoid"
 
 
-def build_top_summary(result: pd.DataFrame, top_n: int = 5) -> List[str]:
+def build_top_summary(result: pd.DataFrame, top_n: int = 5) -> List[dict]:
     if result.empty:
         return []
 
@@ -605,7 +713,19 @@ def build_top_summary(result: pd.DataFrame, top_n: int = 5) -> List[str]:
         decision = str(row.get("decision", "-"))
         dist = format_value(row.get("distance_from_buy_pct"), is_percent=True)
         score = format_value(row.get("entry_score"))
-        lines.append(f"{symbol}: {decision} | price {price} | buy zone {preferred} | distance {dist} | score {score}")
+        entry_quality = str(row.get("entry_quality", ""))
+        lines.append(
+            {
+                "symbol": symbol,
+                "decision": decision,
+                "entry_quality": entry_quality,
+                "price": price,
+                "preferred": preferred,
+                "distance": dist,
+                "score": score,
+                "notes": str(row.get("notes", "")),
+            }
+        )
     return lines
 
 
@@ -615,7 +735,7 @@ def build_share_text(result: pd.DataFrame, crypto_title: str, stock_title: str) 
 
     if summary:
         lines.append("Top setups:")
-        lines.extend([f"- {line}" for line in summary])
+        lines.extend([f"- {item['symbol']}: {item['decision']} | price {item['price']} | buy zone {item['preferred']} | distance {item['distance']} | score {item['score']}" for item in summary])
     else:
         lines.append("No strong pullback entries right now.")
 
@@ -658,15 +778,50 @@ with st.sidebar:
         "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "GOOGL",
         "MSTR", "COIN", "SPY", "QQQ", "GLD", "SLV", "IBIT",
     ]
-    chosen_presets = st.multiselect("Add common tickers", options=preset_symbols)
-    manual_ticker = st.text_input("Add ticker manually", placeholder="Example: MSTR or AVAX-USD")
 
-    editable_watchlist = st.text_area("Current watchlist", value="\n".join(current_watchlist()), height=220)
+    if "watchlist_editor" not in st.session_state:
+        st.session_state.watchlist_editor = "\n".join(current_watchlist())
+
+    chosen_presets = st.multiselect("Add common tickers", options=preset_symbols)
+    st.caption("Search any Yahoo Finance ticker, validate it, then add it to your watchlist.")
+
+    search_ticker = st.text_input(
+        "Ticker search",
+        placeholder="Example: BTC-USD, SOL-USD, AAPL, MSTR, IBIT",
+    )
+
+    col_check, col_add = st.columns(2)
+
+    with col_check:
+        if st.button("Check ticker", width="stretch"):
+            ticker = search_ticker.strip().upper()
+            if not ticker:
+                st.warning("Enter a ticker first.")
+            elif validate_ticker(ticker):
+                st.success(f"{ticker} is available.")
+            else:
+                st.error(f"{ticker} was not found or has no recent data.")
+
+    with col_add:
+        if st.button("Add ticker", width="stretch"):
+            ticker = search_ticker.strip().upper()
+            current_lines = [x.strip().upper() for x in st.session_state.watchlist_editor.splitlines() if x.strip()]
+
+            if not ticker:
+                st.warning("Enter a ticker first.")
+            elif not validate_ticker(ticker):
+                st.error(f"{ticker} is not available from Yahoo Finance.")
+            elif ticker in current_lines:
+                st.info(f"{ticker} is already in the watchlist.")
+            else:
+                current_lines.append(ticker)
+                st.session_state.watchlist_editor = "\n".join(current_lines)
+                st.success(f"Added {ticker} to the watchlist editor.")
+
+    editable_watchlist = st.text_area("Current watchlist", key="watchlist_editor", height=220)
 
     if st.button("Save watchlist", width="stretch"):
         lines = editable_watchlist.splitlines()
-        if manual_ticker.strip():
-            lines.append(manual_ticker.strip())
         lines.extend(chosen_presets)
         save_watchlist(lines)
         st.cache_data.clear()
@@ -684,9 +839,9 @@ with st.sidebar:
     st.divider()
     st.caption(f"Project folder: {BASE_DIR}")
 
-st.info("📈 Scanning adaptive pullback setups...")
+st.info("🌅 Scanning adaptive pullback setups across your sunset board...")
 
-with st.spinner("Scanning adaptive pullback setups..."):
+with st.spinner("Scanning adaptive pullback setups across your sunset board..."):
     result = get_analysis(period=period, interval=interval)
     result = enrich_results_with_pullback_system(result, period=period, interval=interval)
 
@@ -740,8 +895,16 @@ left, right = st.columns([1.05, 1.25])
 with left:
     st.subheader("Top setups")
     if summary_lines:
-        for line in summary_lines:
-            st.write(f"- {line}")
+        for item in summary_lines:
+            badge = signal_badge_html(item["decision"], item["entry_quality"])
+            st.markdown(
+                f'<div class="setup-line">'
+                f'{badge}'
+                f'<div class="setup-title">{item["symbol"]} — price {item["price"]} | buy zone {item["preferred"]}</div>'
+                f'<div class="setup-note">Distance {item["distance"]} | Score {item["score"]} | {item["notes"]}</div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
     else:
         st.write("No buy-ready pullback setups right now.")
 
@@ -802,8 +965,9 @@ if symbols:
         columns[idx % 4].metric(label, value)
 
     decision_text = str(selected_row.get("decision", "-"))
+    badge = signal_badge_html(decision_text, str(selected_row.get("entry_quality", "")))
     st.markdown(
-        f'<div class="accent-card"><span class="{decision_class(decision_text)}">{decision_text}</span><br>'
+        f'<div class="accent-card">{badge}<br><span class="{decision_class(decision_text)}">{decision_text}</span><br>'
         f'<span class="small-note">{selected_row.get("notes", "-")}</span></div>',
         unsafe_allow_html=True,
     )
@@ -826,3 +990,4 @@ st.download_button(
     mime="text/csv",
     width="stretch",
 )
+
