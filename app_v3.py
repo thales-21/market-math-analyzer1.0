@@ -1,8 +1,9 @@
-
 from __future__ import annotations
 
 from pathlib import Path
 from typing import List, Tuple
+import math
+import re
 
 import pandas as pd
 import streamlit as st
@@ -16,19 +17,7 @@ from market_math_analyzer_v2 import (
     run_analysis,
 )
 
-st.set_page_config(page_title="Market Math Analyzer V3", layout="wide")
-
-BURGUNDY = "#7A1F45"
-BURGUNDY_SOFT = "#A14B73"
-ROSE = "#D48AA7"
-GOLD = "#D6B35A"
-BG_TOP = "#F7F1F4"
-BG_BOTTOM = "#EEF3FA"
-CARD = "#FFFFFF"
-CARD_ALT = "#F8FAFD"
-TEXT = "#1F2430"
-MUTED = "#5E6573"
-BORDER = "rgba(122,31,69,0.20)"
+st.set_page_config(page_title="Market Math Analyzer V3 Pro", layout="wide")
 
 CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC")
 CRYPTO_KEYWORDS = {
@@ -36,187 +25,22 @@ CRYPTO_KEYWORDS = {
     "HBAR", "ATOM", "BNB", "AVAX", "LINK",
 }
 
-st.markdown(
-    """
-    <style>
-    .stApp {
-        background:
-            radial-gradient(circle at top left, rgba(255, 182, 92, 0.28) 0%, rgba(255, 182, 92, 0.02) 32%),
-            radial-gradient(circle at top right, rgba(255, 106, 136, 0.22) 0%, rgba(255, 106, 136, 0.03) 28%),
-            linear-gradient(180deg, #1f1029 0%, #34142f 24%, #5b2245 48%, #8a3b4a 72%, #f09a61 100%);
-        color: #fff7ef;
-    }
-
-    .main-title {
-        color: #fff7ef;
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 0.15rem;
-        text-shadow: 0 0 14px rgba(255, 182, 92, 0.22);
-    }
-
-    .sub-title {
-        color: #ffd7c0;
-        margin-bottom: 1rem;
-    }
-
-    div[data-testid="stMetric"] {
-        background: linear-gradient(180deg, rgba(66, 25, 56, 0.92) 0%, rgba(37, 16, 46, 0.94) 100%);
-        color: #fff7ef !important;
-        border-radius: 18px;
-        padding: 0.75rem;
-        border: 1px solid rgba(255, 190, 120, 0.22);
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
-    }
-
-    div[data-testid="stMetricLabel"] {
-        color: #ffd7c0 !important;
-        font-weight: 600;
-    }
-
-    div[data-testid="stMetricValue"] {
-        color: #fff7ef !important;
-        font-weight: 800;
-        font-size: 1.2rem;
-    }
-
-    .stDataFrame, .stDataFrame * {
-        color: #fff7ef !important;
-    }
-
-    div[data-baseweb="select"] > div,
-    .stTextInput > div > div > input,
-    .stTextArea textarea {
-        background: rgba(42, 18, 49, 0.82) !important;
-        color: #fff7ef !important;
-        border: 1px solid rgba(255, 190, 120, 0.18) !important;
-    }
-
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, rgba(30, 15, 42, 0.98) 0%, rgba(58, 21, 50, 0.98) 48%, rgba(92, 36, 61, 0.98) 100%);
-        border-right: 1px solid rgba(255, 190, 120, 0.12);
-    }
-
-    .accent-card {
-        background: linear-gradient(180deg, rgba(70, 24, 57, 0.92) 0%, rgba(41, 17, 48, 0.95) 100%);
-        border-left: 6px solid #ff9f68;
-        color: #fff7ef;
-        border-radius: 18px;
-        padding: 0.95rem 1rem;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-    }
-
-    .accent-card-soft {
-        background: linear-gradient(180deg, rgba(84, 34, 53, 0.92) 0%, rgba(47, 20, 49, 0.95) 100%);
-        border-left: 6px solid #ffd36e;
-        color: #fff7ef;
-        border-radius: 18px;
-        padding: 0.95rem 1rem;
-        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
-    }
-
-    .decision-buy {
-        color: #ffe88a;
-        font-weight: 800;
-        text-shadow: 0 0 10px rgba(255, 232, 138, 0.55);
-    }
-
-    .decision-watch {
-        color: #ffd39f;
-        font-weight: 800;
-    }
-
-    .decision-avoid {
-        color: #ff9ba6;
-        font-weight: 800;
-    }
-
-    .small-note {
-        color: #ffe7d7;
-    }
-
-    .signal-pill {
-        display: inline-block;
-        padding: 0.38rem 0.72rem;
-        border-radius: 999px;
-        font-size: 0.88rem;
-        font-weight: 800;
-        margin-bottom: 0.45rem;
-        letter-spacing: 0.01em;
-    }
-
-    .pill-strong-buy {
-        background: rgba(255, 224, 118, 0.16);
-        border: 1px solid rgba(255, 224, 118, 0.45);
-        color: #fff2a6;
-        box-shadow: 0 0 14px rgba(255, 224, 118, 0.62), 0 0 28px rgba(255, 172, 73, 0.28);
-    }
-
-    .pill-moderate-buy, .pill-buy {
-        background: rgba(255, 169, 94, 0.14);
-        border: 1px solid rgba(255, 169, 94, 0.42);
-        color: #ffd9a8;
-        box-shadow: 0 0 12px rgba(255, 169, 94, 0.42);
-    }
-
-    .pill-hold {
-        background: rgba(255, 209, 136, 0.10);
-        border: 1px solid rgba(255, 209, 136, 0.30);
-        color: #ffe0b0;
-    }
-
-    .pill-avoid {
-        background: rgba(255, 130, 146, 0.12);
-        border: 1px solid rgba(255, 130, 146, 0.28);
-        color: #ffbac3;
-    }
-
-    .setup-line {
-        background: linear-gradient(180deg, rgba(66, 25, 56, 0.75) 0%, rgba(37, 16, 46, 0.88) 100%);
-        border: 1px solid rgba(255, 190, 120, 0.16);
-        border-radius: 16px;
-        padding: 0.85rem 1rem;
-        margin-bottom: 0.6rem;
-        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
-    }
-
-    .setup-title {
-        color: #fff7ef;
-        font-weight: 800;
-        margin-bottom: 0.2rem;
-    }
-
-    .setup-note {
-        color: #ffd7c0;
-        font-size: 0.92rem;
-    }
-
-    .stAlert {
-        background: rgba(66, 25, 56, 0.80) !important;
-        color: #fff7ef !important;
-        border: 1px solid rgba(255, 190, 120, 0.20) !important;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 ASSET_CONFIG = {
     "BTC-USD": {
         "label": "Bitcoin",
         "preferred_buy_price": 71000.0,
-        "max_chase_pct": 0.05,
-        "hard_overextended_pct": 0.10,
+        "max_chase_pct": 0.045,
+        "hard_overextended_pct": 0.09,
         "rsi_buy_min": 38,
         "rsi_buy_max": 58,
         "rsi_hot": 67,
-        "volatility_tolerance": 0.045,
+        "volatility_tolerance": 0.04,
     },
     "SOL-USD": {
         "label": "Solana",
         "preferred_buy_price": 81.0,
         "max_chase_pct": 0.06,
-        "hard_overextended_pct": 0.12,
+        "hard_overextended_pct": 0.11,
         "rsi_buy_min": 36,
         "rsi_buy_max": 60,
         "rsi_hot": 70,
@@ -234,6 +58,106 @@ DEFAULT_PULLBACK_CONFIG = {
     "rsi_hot": 68,
     "volatility_tolerance": 0.06,
 }
+
+POSITIVE_WORDS = {
+    "beat", "beats", "surge", "surges", "rally", "rallies", "approval", "approved",
+    "partnership", "adoption", "adopts", "record", "records", "strong", "bullish",
+    "breakout", "launch", "growth", "gains", "gain", "upgrade", "upgrades", "buyback",
+    "profit", "profits", "demand", "expansion", "wins", "win", "momentum",
+}
+NEGATIVE_WORDS = {
+    "miss", "misses", "drop", "drops", "plunge", "plunges", "lawsuit", "probe", "fraud",
+    "hack", "hacked", "risk", "risks", "downgrade", "downgrades", "bearish", "weak",
+    "delay", "delays", "selloff", "loss", "losses", "fall", "falls", "concern", "warning",
+    "uncertain", "volatility", "volatile", "cuts", "cut", "recession", "tariff", "ban",
+}
+
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background:
+            radial-gradient(circle at top left, rgba(255, 182, 92, 0.28) 0%, rgba(255, 182, 92, 0.02) 32%),
+            radial-gradient(circle at top right, rgba(255, 106, 136, 0.22) 0%, rgba(255, 106, 136, 0.03) 28%),
+            linear-gradient(180deg, #1f1029 0%, #34142f 24%, #5b2245 48%, #8a3b4a 72%, #f09a61 100%);
+        color: #fff7ef;
+    }
+    .main-title {
+        color: #fff7ef;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.15rem;
+        text-shadow: 0 0 14px rgba(255, 182, 92, 0.22);
+    }
+    .sub-title { color: #ffd7c0; margin-bottom: 1rem; }
+    div[data-testid="stMetric"] {
+        background: linear-gradient(180deg, rgba(66, 25, 56, 0.92) 0%, rgba(37, 16, 46, 0.94) 100%);
+        color: #fff7ef !important; border-radius: 18px; padding: 0.75rem;
+        border: 1px solid rgba(255, 190, 120, 0.22);
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+    }
+    div[data-testid="stMetricLabel"] { color: #ffd7c0 !important; font-weight: 600; }
+    div[data-testid="stMetricValue"] { color: #fff7ef !important; font-weight: 800; font-size: 1.2rem; }
+    .stDataFrame, .stDataFrame * { color: #fff7ef !important; }
+    div[data-baseweb="select"] > div, .stTextInput > div > div > input, .stTextArea textarea, .stNumberInput input {
+        background: rgba(42, 18, 49, 0.82) !important; color: #fff7ef !important;
+        border: 1px solid rgba(255, 190, 120, 0.18) !important;
+    }
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, rgba(30, 15, 42, 0.98) 0%, rgba(58, 21, 50, 0.98) 48%, rgba(92, 36, 61, 0.98) 100%);
+        border-right: 1px solid rgba(255, 190, 120, 0.12);
+    }
+    .accent-card, .accent-card-soft, .setup-line, .alert-card {
+        border-radius: 18px; padding: 0.95rem 1rem; box-shadow: 0 12px 28px rgba(0, 0, 0, 0.22);
+    }
+    .accent-card {
+        background: linear-gradient(180deg, rgba(70, 24, 57, 0.92) 0%, rgba(41, 17, 48, 0.95) 100%);
+        border-left: 6px solid #ff9f68; color: #fff7ef;
+    }
+    .accent-card-soft {
+        background: linear-gradient(180deg, rgba(84, 34, 53, 0.92) 0%, rgba(47, 20, 49, 0.95) 100%);
+        border-left: 6px solid #ffd36e; color: #fff7ef;
+    }
+    .alert-card {
+        background: linear-gradient(180deg, rgba(88, 38, 53, 0.92) 0%, rgba(41, 17, 48, 0.95) 100%);
+        border-left: 6px solid #ffd36e; color: #fff7ef; margin-bottom: 0.6rem;
+    }
+    .decision-buy { color: #ffe88a; font-weight: 800; text-shadow: 0 0 10px rgba(255, 232, 138, 0.55); }
+    .decision-watch { color: #ffd39f; font-weight: 800; }
+    .decision-avoid { color: #ff9ba6; font-weight: 800; }
+    .small-note { color: #ffe7d7; }
+    .signal-pill {
+        display: inline-block; padding: 0.38rem 0.72rem; border-radius: 999px; font-size: 0.88rem;
+        font-weight: 800; margin-bottom: 0.45rem; letter-spacing: 0.01em;
+    }
+    .pill-strong-buy {
+        background: rgba(255, 224, 118, 0.16); border: 1px solid rgba(255, 224, 118, 0.45);
+        color: #fff2a6; box-shadow: 0 0 14px rgba(255, 224, 118, 0.62), 0 0 28px rgba(255, 172, 73, 0.28);
+    }
+    .pill-moderate-buy, .pill-buy {
+        background: rgba(255, 169, 94, 0.14); border: 1px solid rgba(255, 169, 94, 0.42);
+        color: #ffd9a8; box-shadow: 0 0 12px rgba(255, 169, 94, 0.42);
+    }
+    .pill-hold {
+        background: rgba(255, 209, 136, 0.10); border: 1px solid rgba(255, 209, 136, 0.30); color: #ffe0b0;
+    }
+    .pill-avoid {
+        background: rgba(255, 130, 146, 0.12); border: 1px solid rgba(255, 130, 146, 0.28); color: #ffbac3;
+    }
+    .setup-line {
+        background: linear-gradient(180deg, rgba(66, 25, 56, 0.75) 0%, rgba(37, 16, 46, 0.88) 100%);
+        border: 1px solid rgba(255, 190, 120, 0.16); margin-bottom: 0.6rem;
+    }
+    .setup-title { color: #fff7ef; font-weight: 800; margin-bottom: 0.2rem; }
+    .setup-note { color: #ffd7c0; font-size: 0.92rem; }
+    .stAlert {
+        background: rgba(66, 25, 56, 0.80) !important; color: #fff7ef !important;
+        border: 1px solid rgba(255, 190, 120, 0.20) !important;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
 def clamp(value: float, low: float, high: float) -> float:
@@ -296,14 +220,15 @@ def get_symbol_history(symbol: str, period: str, interval: str) -> pd.DataFrame:
     avg_gain = gain.ewm(alpha=1 / 14, adjust=False).mean()
     avg_loss = loss.ewm(alpha=1 / 14, adjust=False).mean()
     rs = avg_gain / avg_loss.replace(0, pd.NA)
-    df["RSI14"] = 100 - (100 / (1 + rs))
-    df["RSI14"] = df["RSI14"].fillna(50.0)
+    df["RSI14"] = (100 - (100 / (1 + rs))).fillna(50.0)
 
     ema12 = close.ewm(span=12, adjust=False).mean()
     ema26 = close.ewm(span=26, adjust=False).mean()
     df["MACD"] = ema12 - ema26
     df["MACD_SIGNAL"] = df["MACD"].ewm(span=9, adjust=False).mean()
     df["EMA21"] = close.ewm(span=21, adjust=False).mean()
+    df["EMA50"] = close.ewm(span=50, adjust=False).mean()
+    df["EMA200"] = close.ewm(span=200, adjust=False).mean()
 
     prev_close = close.shift(1)
     tr_components = pd.concat(
@@ -324,8 +249,16 @@ def get_symbol_history(symbol: str, period: str, interval: str) -> pd.DataFrame:
     df["LOW20"] = low.rolling(20).min()
     df["LOW60"] = low.rolling(60).min()
     df["HIGH20"] = high.rolling(20).max()
-
+    df["HIGH60"] = high.rolling(60).max()
     return df.dropna(how="all")
+
+
+@st.cache_data(ttl=300, show_spinner=False)
+def get_multi_timeframe_history(symbol: str) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    hourly = get_symbol_history(symbol, period="3mo", interval="1h")
+    daily = get_symbol_history(symbol, period="1y", interval="1d")
+    weekly = get_symbol_history(symbol, period="5y", interval="1wk")
+    return hourly, daily, weekly
 
 
 def read_text_file(path: Path) -> str:
@@ -337,17 +270,14 @@ def read_text_file(path: Path) -> str:
 def save_watchlist(symbols: List[str]) -> None:
     cleaned: List[str] = []
     seen = set()
-
     for symbol in symbols:
         s = symbol.strip().upper()
         if s and s not in seen:
             cleaned.append(s)
             seen.add(s)
-
     content = "\n".join(cleaned)
     if content:
         content += "\n"
-
     WATCHLIST_FILE.write_text(content, encoding="utf-8")
 
 
@@ -355,7 +285,6 @@ def save_formulas(text: str) -> None:
     content = text.strip()
     if content:
         content += "\n"
-
     FORMULAS_FILE.write_text(content, encoding="utf-8")
 
 
@@ -383,7 +312,6 @@ def validate_ticker(symbol: str) -> bool:
     symbol = symbol.strip().upper()
     if not symbol:
         return False
-
     try:
         test = yf.download(symbol, period="5d", interval="1d", auto_adjust=True, progress=False)
         if test is None or test.empty:
@@ -398,7 +326,6 @@ def validate_ticker(symbol: str) -> bool:
 def signal_badge_html(decision: str, entry_quality: str = "") -> str:
     decision_upper = str(decision).upper()
     entry_upper = str(entry_quality).upper()
-
     if decision_upper == "BUY" and entry_upper == "STRONG":
         return '<span class="signal-pill pill-strong-buy">● Strong Buy</span>'
     if decision_upper == "BUY" and entry_upper in {"MODERATE", "MIXED"}:
@@ -420,7 +347,69 @@ def label_strength(score: float) -> str:
     return "Weak"
 
 
-def infer_dynamic_buy_price(symbol: str, history: pd.DataFrame, current_price: float) -> float:
+def detect_support_resistance(history: pd.DataFrame, current_price: float) -> dict:
+    if history.empty or len(history) < 40 or not {"High", "Low", "Close"}.issubset(history.columns):
+        fallback_support = current_price * 0.95
+        fallback_resistance = current_price * 1.05
+        return {
+            "support": round(fallback_support, 2),
+            "resistance": round(fallback_resistance, 2),
+            "support_strength": 0,
+            "resistance_strength": 0,
+            "support_zone": f"{fallback_support * 0.995:,.2f} - {fallback_support * 1.005:,.2f}",
+            "resistance_zone": f"{fallback_resistance * 0.995:,.2f} - {fallback_resistance * 1.005:,.2f}",
+        }
+
+    lows = history["Low"].tail(120)
+    highs = history["High"].tail(120)
+    tol = max(current_price * 0.0125, safe_float(history["ATR14"].tail(1).mean(), current_price * 0.01))
+
+    support_candidates = []
+    resistance_candidates = []
+
+    low_values = lows.tolist()
+    high_values = highs.tolist()
+    for i in range(2, len(low_values) - 2):
+        window_low = low_values[i - 2:i + 3]
+        val_low = low_values[i]
+        if val_low == min(window_low) and val_low < current_price:
+            support_candidates.append(val_low)
+
+        window_high = high_values[i - 2:i + 3]
+        val_high = high_values[i]
+        if val_high == max(window_high) and val_high > current_price:
+            resistance_candidates.append(val_high)
+
+    def choose_level(candidates: List[float], side: str) -> Tuple[float, int]:
+        if not candidates:
+            return (current_price * (0.95 if side == "support" else 1.05), 0)
+        best_level = candidates[-1]
+        best_count = 1
+        for level in candidates:
+            count = sum(abs(level - other) <= tol for other in candidates)
+            if side == "support":
+                better = count > best_count or (count == best_count and level > best_level)
+            else:
+                better = count > best_count or (count == best_count and level < best_level)
+            if better:
+                best_level = level
+                best_count = count
+        return best_level, best_count
+
+    support, support_strength = choose_level(support_candidates, "support")
+    resistance, resistance_strength = choose_level(resistance_candidates, "resistance")
+
+    return {
+        "support": round(float(support), 2),
+        "resistance": round(float(resistance), 2),
+        "support_strength": int(support_strength),
+        "resistance_strength": int(resistance_strength),
+        "support_zone": f"{support * 0.995:,.2f} - {support * 1.005:,.2f}",
+        "resistance_zone": f"{resistance * 0.995:,.2f} - {resistance * 1.005:,.2f}",
+    }
+
+
+def infer_dynamic_buy_price(symbol: str, history: pd.DataFrame, current_price: float, levels: dict | None = None) -> float:
     cfg = {**DEFAULT_PULLBACK_CONFIG, **ASSET_CONFIG.get(symbol, {})}
     manual_preferred = safe_float(cfg.get("preferred_buy_price"), current_price)
 
@@ -432,26 +421,194 @@ def infer_dynamic_buy_price(symbol: str, history: pd.DataFrame, current_price: f
     low60 = safe_float(last.get("LOW60"), low20)
     ema21 = safe_float(last.get("EMA21"), current_price)
     atr_pct = safe_float(last.get("ATR_PCT"), 0.03)
+    support = safe_float((levels or {}).get("support"), low20)
 
-    adaptive_support = (low20 * 0.50) + (low60 * 0.20) + (ema21 * 0.30)
+    adaptive_support = (low20 * 0.35) + (low60 * 0.15) + (ema21 * 0.20) + (support * 0.30)
 
     if manual_preferred <= 0:
         preferred = adaptive_support
     else:
         if adaptive_support > manual_preferred * 1.03:
-            preferred = adaptive_support
-        elif adaptive_support < manual_preferred * 0.92:
-            preferred = (manual_preferred * 0.60) + (adaptive_support * 0.40)
+            preferred = (manual_preferred * 0.20) + (adaptive_support * 0.80)
+        elif adaptive_support < manual_preferred * 0.94:
+            preferred = (manual_preferred * 0.70) + (adaptive_support * 0.30)
         else:
             preferred = (manual_preferred * 0.35) + (adaptive_support * 0.65)
 
-    band_adjustment = 1 - min(max(atr_pct * 0.35, 0.0), 0.03)
+    band_adjustment = 1 - min(max(atr_pct * 0.22, 0.0), 0.02)
     preferred *= band_adjustment
 
-    ceiling = current_price * 0.995
-    floor = current_price * 0.75
+    ceiling = min(current_price * 0.995, safe_float((levels or {}).get("resistance"), current_price * 1.05))
+    floor = max(current_price * 0.82, support * 0.985)
     preferred = clamp(preferred, floor, ceiling)
     return round(preferred, 2)
+
+
+def analyze_timeframe(history: pd.DataFrame) -> dict:
+    if history.empty or len(history) < 30:
+        return {"bias": "Mixed", "score": 50.0, "reason": "Not enough timeframe data."}
+
+    last = history.iloc[-1]
+    close = safe_float(last.get("Close"), 0.0)
+    ema21 = safe_float(last.get("EMA21"), close)
+    ema50 = safe_float(last.get("EMA50"), close)
+    ema200 = safe_float(last.get("EMA200"), close)
+    macd = safe_float(last.get("MACD"), 0.0)
+    macd_signal = safe_float(last.get("MACD_SIGNAL"), 0.0)
+    rsi = safe_float(last.get("RSI14"), 50.0)
+
+    score = 50.0
+    reasons: List[str] = []
+
+    if close > ema21:
+        score += 8
+        reasons.append("price above EMA21")
+    else:
+        score -= 8
+        reasons.append("price below EMA21")
+
+    if close > ema50:
+        score += 10
+        reasons.append("price above EMA50")
+    else:
+        score -= 10
+        reasons.append("price below EMA50")
+
+    if close > ema200:
+        score += 12
+        reasons.append("price above EMA200")
+    else:
+        score -= 12
+        reasons.append("price below EMA200")
+
+    if macd > macd_signal:
+        score += 10
+        reasons.append("MACD constructive")
+    else:
+        score -= 10
+        reasons.append("MACD weak")
+
+    if 42 <= rsi <= 62:
+        score += 8
+        reasons.append("RSI healthy")
+    elif rsi > 70:
+        score -= 8
+        reasons.append("RSI hot")
+    elif rsi < 35:
+        score -= 6
+        reasons.append("RSI soft")
+
+    score = clamp(score, 0, 100)
+    if score >= 65:
+        bias = "Bullish"
+    elif score <= 40:
+        bias = "Bearish"
+    else:
+        bias = "Mixed"
+
+    return {"bias": bias, "score": round(score, 1), "reason": ", ".join(reasons[:3])}
+
+
+def multi_timeframe_confirmation(symbol: str) -> dict:
+    hourly, daily, weekly = get_multi_timeframe_history(symbol)
+    h = analyze_timeframe(hourly)
+    d = analyze_timeframe(daily)
+    w = analyze_timeframe(weekly)
+    combined = round((h["score"] * 0.25) + (d["score"] * 0.45) + (w["score"] * 0.30), 1)
+    aligned = h["bias"] == d["bias"] == w["bias"] and h["bias"] != "Mixed"
+    label = "Aligned" if aligned else "Mixed"
+    if combined >= 65 and d["bias"] == "Bullish":
+        label = "Bullish Alignment"
+    elif combined <= 40 and d["bias"] == "Bearish":
+        label = "Bearish Alignment"
+    return {
+        "mtf_hourly": h["bias"],
+        "mtf_daily": d["bias"],
+        "mtf_weekly": w["bias"],
+        "mtf_score": combined,
+        "mtf_label": label,
+        "mtf_reason": f"1H: {h['reason']} | 1D: {d['reason']} | 1W: {w['reason']}",
+        "daily_history": daily,
+        "hourly_history": hourly,
+        "weekly_history": weekly,
+    }
+
+
+@st.cache_data(ttl=900, show_spinner=False)
+def get_news_sentiment(symbol: str) -> dict:
+    try:
+        ticker = yf.Ticker(symbol)
+        news_items = ticker.news or []
+    except Exception:
+        news_items = []
+
+    if not news_items:
+        return {
+            "news_sentiment_score": 0.0,
+            "news_sentiment_label": "Neutral",
+            "news_headline_count": 0,
+            "top_headlines": [],
+        }
+
+    scores = []
+    headlines = []
+    for item in news_items[:10]:
+        title = str(item.get("title", "")).strip()
+        if not title:
+            continue
+        text = re.sub(r"[^a-zA-Z0-9\s]", " ", title.lower())
+        words = [w for w in text.split() if w]
+        pos = sum(1 for w in words if w in POSITIVE_WORDS)
+        neg = sum(1 for w in words if w in NEGATIVE_WORDS)
+        base = (pos - neg) / max(1, len(words) ** 0.5)
+        if "bitcoin" in text or "solana" in text or symbol.split("-")[0].lower() in text:
+            base *= 1.1
+        scores.append(base)
+        headlines.append(title)
+
+    avg_score = round(sum(scores) / max(1, len(scores)), 3)
+    if avg_score >= 0.18:
+        label = "Positive"
+    elif avg_score <= -0.18:
+        label = "Negative"
+    else:
+        label = "Neutral"
+
+    return {
+        "news_sentiment_score": avg_score,
+        "news_sentiment_label": label,
+        "news_headline_count": len(headlines),
+        "top_headlines": headlines[:5],
+    }
+
+
+def estimate_trade_plan(current_price: float, preferred_buy: float, support: float, resistance: float, atr_pct: float, account_size: float, risk_pct: float, max_exposure_pct: float) -> dict:
+    entry_price = preferred_buy if preferred_buy > 0 else current_price
+    atr_buffer = max(current_price * atr_pct * 0.75, current_price * 0.01)
+    stop_price = min(entry_price - atr_buffer, support * 0.99)
+    stop_price = max(stop_price, entry_price * 0.85)
+    risk_per_unit = max(entry_price - stop_price, entry_price * 0.005)
+    target_price = max(resistance, entry_price + risk_per_unit * 2.0)
+    reward_per_unit = max(target_price - entry_price, 0.0)
+    rr_ratio = reward_per_unit / risk_per_unit if risk_per_unit > 0 else 0.0
+
+    capital_at_risk = account_size * (risk_pct / 100)
+    exposure_cap = account_size * (max_exposure_pct / 100)
+    position_units_risk = capital_at_risk / risk_per_unit if risk_per_unit > 0 else 0.0
+    position_units_exposure = exposure_cap / entry_price if entry_price > 0 else 0.0
+    units = max(0.0, min(position_units_risk, position_units_exposure))
+    position_value = units * entry_price
+
+    return {
+        "entry_price": round(entry_price, 2),
+        "stop_price": round(stop_price, 2),
+        "target_price": round(target_price, 2),
+        "rr_ratio": round(rr_ratio, 2),
+        "units": round(units, 4),
+        "position_value": round(position_value, 2),
+        "capital_at_risk": round(capital_at_risk, 2),
+        "exposure_cap": round(exposure_cap, 2),
+    }
 
 
 def analyze_pullback_setup(
@@ -461,6 +618,10 @@ def analyze_pullback_setup(
     macd: float,
     macd_signal: float,
     preferred_buy: float,
+    support: float,
+    resistance: float,
+    mtf_score: float,
+    news_score: float,
     atr_pct: float | None = None,
     volume_ratio: float | None = None,
 ) -> dict:
@@ -473,13 +634,14 @@ def analyze_pullback_setup(
     volatility_tolerance = safe_float(cfg.get("volatility_tolerance"), 0.05)
 
     distance_from_buy = pct_distance(current_price, preferred_buy)
+    support_gap_pct = pct_distance(current_price, support)
+    resistance_gap_pct = pct_distance(resistance, current_price)
 
     trend_score = 50
     if macd > macd_signal:
         trend_score += 15
     else:
         trend_score -= 15
-
     if macd > 0:
         trend_score += 10
     else:
@@ -497,13 +659,21 @@ def analyze_pullback_setup(
 
     pullback_score = 50
     if distance_from_buy <= 0:
-        pullback_score += 25
+        pullback_score += 22
     elif distance_from_buy <= max_chase_pct:
         pullback_score += 10
     elif distance_from_buy <= hard_overextended_pct:
         pullback_score -= 15
     else:
         pullback_score -= 35
+
+    level_score = 50
+    if current_price >= support * 0.995 and current_price <= support * 1.03:
+        level_score += 18
+    elif support_gap_pct > 0.08:
+        level_score -= 14
+    if resistance_gap_pct < 0.05:
+        level_score -= 8
 
     overextended_penalty = 0
     if distance_from_buy > max_chase_pct:
@@ -518,7 +688,7 @@ def analyze_pullback_setup(
         if atr_pct <= volatility_tolerance:
             volatility_score += 10
         else:
-            volatility_score -= 15
+            volatility_score -= 12
 
     volume_score = 50
     if volume_ratio is not None and not pd.isna(volume_ratio):
@@ -528,41 +698,57 @@ def analyze_pullback_setup(
             volume_score -= 10
 
     raw_score = (
-        trend_score * 0.25
-        + momentum_score * 0.20
-        + pullback_score * 0.30
-        + volatility_score * 0.10
-        + volume_score * 0.15
+        trend_score * 0.18
+        + momentum_score * 0.14
+        + pullback_score * 0.20
+        + level_score * 0.14
+        + volatility_score * 0.08
+        + volume_score * 0.08
+        + mtf_score * 0.12
+        + (50 + news_score * 60) * 0.06
     ) - overextended_penalty
 
     final_score = round(clamp(raw_score, 0, 100), 1)
     entry_quality = label_strength(final_score)
 
     reasons = []
-    if macd > macd_signal:
-        reasons.append("MACD remains constructive")
-    else:
-        reasons.append("MACD is below its signal line")
-
+    reasons.append("MACD constructive" if macd > macd_signal else "MACD below signal")
     if rsi_buy_min <= rsi <= rsi_buy_max:
-        reasons.append("RSI sits in a favorable pullback range")
+        reasons.append("RSI in favorable pullback range")
     elif rsi > rsi_hot:
-        reasons.append("RSI is overheated for fresh entries")
+        reasons.append("RSI overheated")
     elif rsi < rsi_buy_min:
-        reasons.append("RSI is soft and still needs confirmation")
+        reasons.append("RSI still soft")
     else:
-        reasons.append("RSI is neutral")
+        reasons.append("RSI neutral")
 
     if distance_from_buy <= 0:
-        reasons.append("Price is at or below the preferred buy zone")
+        reasons.append("Price at or under preferred buy")
     elif distance_from_buy <= max_chase_pct:
-        reasons.append("Price is close to the preferred buy zone")
+        reasons.append("Price near preferred buy")
     elif distance_from_buy <= hard_overextended_pct:
-        reasons.append("Price is somewhat stretched above ideal entry")
+        reasons.append("Price somewhat extended")
     else:
-        reasons.append("Price is too extended above ideal entry")
+        reasons.append("Price too extended")
 
-    if final_score >= 72 and distance_from_buy <= max_chase_pct and rsi < rsi_hot and macd >= macd_signal:
+    if current_price >= support * 0.995 and current_price <= support * 1.03:
+        reasons.append("Trading near support zone")
+    if news_score >= 0.18:
+        reasons.append("Headline sentiment supportive")
+    elif news_score <= -0.18:
+        reasons.append("Headline sentiment weak")
+    if mtf_score >= 65:
+        reasons.append("Timeframes aligned")
+    elif mtf_score <= 40:
+        reasons.append("Higher timeframe weak")
+
+    if (
+        final_score >= 72
+        and distance_from_buy <= max_chase_pct
+        and rsi < rsi_hot
+        and macd >= macd_signal
+        and mtf_score >= 55
+    ):
         decision = "BUY"
     elif final_score >= 45:
         decision = "HOLD / WAIT"
@@ -571,6 +757,7 @@ def analyze_pullback_setup(
 
     confidence = "High" if final_score >= 75 else "Medium" if final_score >= 55 else "Low"
 
+    wait_price = preferred_buy if current_price > preferred_buy else current_price
     return {
         "signal": decision,
         "decision": decision,
@@ -582,11 +769,12 @@ def analyze_pullback_setup(
         "distance_from_buy_pct": round(distance_from_buy * 100, 2),
         "trend_label": "Bullish" if trend_score >= 60 else "Mixed" if trend_score >= 45 else "Bearish",
         "momentum_label": "Favorable" if momentum_score >= 60 else "Neutral" if momentum_score >= 45 else "Weak",
-        "notes": " | ".join(reasons),
+        "wait_price": round(wait_price, 2),
+        "notes": " | ".join(reasons[:6]),
     }
 
 
-def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval: str) -> pd.DataFrame:
+def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval: str, include_news: bool = True) -> pd.DataFrame:
     if df.empty or "symbol" not in df.columns:
         return df
 
@@ -622,7 +810,16 @@ def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval:
         atr_pct = safe_float(last.get("ATR_PCT"), pd.NA)
         volume_ratio = safe_float(last.get("VOLUME_RATIO"), pd.NA)
 
-        preferred_buy = infer_dynamic_buy_price(symbol, history, current_price)
+        levels = detect_support_resistance(history, current_price)
+        mtf = multi_timeframe_confirmation(symbol)
+        news = get_news_sentiment(symbol) if include_news else {
+            "news_sentiment_score": 0.0,
+            "news_sentiment_label": "Neutral",
+            "news_headline_count": 0,
+            "top_headlines": [],
+        }
+
+        preferred_buy = infer_dynamic_buy_price(symbol, history, current_price, levels=levels)
         pullback = analyze_pullback_setup(
             symbol=symbol,
             current_price=current_price,
@@ -630,6 +827,10 @@ def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval:
             macd=macd,
             macd_signal=macd_signal,
             preferred_buy=preferred_buy,
+            support=levels["support"],
+            resistance=levels["resistance"],
+            mtf_score=safe_float(mtf["mtf_score"], 50.0),
+            news_score=safe_float(news["news_sentiment_score"], 0.0),
             atr_pct=atr_pct,
             volume_ratio=volume_ratio,
         )
@@ -648,6 +849,22 @@ def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval:
         row["entry_quality"] = pullback["entry_quality"]
         row["trend_label"] = pullback["trend_label"]
         row["momentum_label"] = pullback["momentum_label"]
+        row["support"] = levels["support"]
+        row["resistance"] = levels["resistance"]
+        row["support_strength"] = levels["support_strength"]
+        row["resistance_strength"] = levels["resistance_strength"]
+        row["support_zone"] = levels["support_zone"]
+        row["resistance_zone"] = levels["resistance_zone"]
+        row["mtf_score"] = mtf["mtf_score"]
+        row["mtf_label"] = mtf["mtf_label"]
+        row["mtf_hourly"] = mtf["mtf_hourly"]
+        row["mtf_daily"] = mtf["mtf_daily"]
+        row["mtf_weekly"] = mtf["mtf_weekly"]
+        row["news_sentiment_score"] = news["news_sentiment_score"]
+        row["news_sentiment_label"] = news["news_sentiment_label"]
+        row["news_headline_count"] = news["news_headline_count"]
+        row["top_headlines"] = " || ".join(news["top_headlines"])
+        row["wait_price"] = pullback["wait_price"]
         row["notes"] = pullback["notes"]
 
         if "pullback_strength" in row.index:
@@ -666,7 +883,6 @@ def classify_group_outlook(df: pd.DataFrame, label: str) -> Tuple[str, str]:
 
     avg_entry_score = float(df["entry_score"].mean()) if "entry_score" in df.columns else 0.0
     avg_20d = float(df["20d_%"].mean()) if "20d_%" in df.columns else 0.0
-    avg_5d = float(df["5d_%"].mean()) if "5d_%" in df.columns else 0.0
     buys = int(df["decision"].eq("BUY").sum()) if "decision" in df.columns else 0
     avoids = int(df["decision"].eq("AVOID").sum()) if "decision" in df.columns else 0
     holds = int(df["decision"].eq("HOLD / WAIT").sum()) if "decision" in df.columns else 0
@@ -677,8 +893,6 @@ def classify_group_outlook(df: pd.DataFrame, label: str) -> Tuple[str, str]:
         return f"{label}: DEFENSIVE", "Risk is elevated and pullback quality is weak across the group."
     if holds >= max(1, buys) and avg_20d > 0:
         return f"{label}: BULLISH BUT EXTENDED", "Structure is still healthy, but many names are above preferred entry zones."
-    if avg_5d < 0 < avg_20d:
-        return f"{label}: PULLBACK IN PROGRESS", "Higher-timeframe structure is intact, but near-term pressure still needs to settle."
     return f"{label}: MIXED", "Signals are split, so selectivity is better than broad aggression."
 
 
@@ -693,36 +907,24 @@ def decision_class(decision: str) -> str:
 def build_top_summary(result: pd.DataFrame, top_n: int = 5) -> List[dict]:
     if result.empty:
         return []
-
     working = result.copy()
+    working["decision_rank"] = working["decision"].map({"BUY": 0, "HOLD / WAIT": 1, "AVOID": 2}).fillna(9)
     if "entry_score" in working.columns:
-        working = working.sort_values(["decision", "entry_score"], ascending=[True, False])
-
-    buy_first = pd.concat(
-        [
-            working[working["decision"] == "BUY"],
-            working[working["decision"] == "HOLD / WAIT"],
-        ]
-    ).head(top_n)
+        working = working.sort_values(["decision_rank", "entry_score"], ascending=[True, False])
+    top = working.head(top_n)
 
     lines = []
-    for _, row in buy_first.iterrows():
-        symbol = str(row.get("symbol", "-"))
-        price = format_value(row.get("price"))
-        preferred = format_value(row.get("preferred_buy_price"))
-        decision = str(row.get("decision", "-"))
-        dist = format_value(row.get("distance_from_buy_pct"), is_percent=True)
-        score = format_value(row.get("entry_score"))
-        entry_quality = str(row.get("entry_quality", ""))
+    for _, row in top.iterrows():
         lines.append(
             {
-                "symbol": symbol,
-                "decision": decision,
-                "entry_quality": entry_quality,
-                "price": price,
-                "preferred": preferred,
-                "distance": dist,
-                "score": score,
+                "symbol": str(row.get("symbol", "-")),
+                "decision": str(row.get("decision", "-")),
+                "entry_quality": str(row.get("entry_quality", "")),
+                "price": format_value(row.get("price")),
+                "preferred": format_value(row.get("preferred_buy_price")),
+                "distance": format_value(row.get("distance_from_buy_pct"), is_percent=True),
+                "score": format_value(row.get("entry_score")),
+                "wait_price": format_value(row.get("wait_price")),
                 "notes": str(row.get("notes", "")),
             }
         )
@@ -732,26 +934,109 @@ def build_top_summary(result: pd.DataFrame, top_n: int = 5) -> List[dict]:
 def build_share_text(result: pd.DataFrame, crypto_title: str, stock_title: str) -> str:
     lines = ["Market Math Analyzer update:", crypto_title, stock_title]
     summary = build_top_summary(result, top_n=5)
-
     if summary:
         lines.append("Top setups:")
-        lines.extend([f"- {item['symbol']}: {item['decision']} | price {item['price']} | buy zone {item['preferred']} | distance {item['distance']} | score {item['score']}" for item in summary])
+        lines.extend([
+            f"- {item['symbol']}: {item['decision']} | price {item['price']} | buy zone {item['preferred']} | wait price {item['wait_price']} | score {item['score']}"
+            for item in summary
+        ])
     else:
         lines.append("No strong pullback entries right now.")
-
-    if "decision" in result.columns:
-        avoids = result[result["decision"] == "AVOID"]["symbol"].head(5).tolist()
-        if avoids:
-            lines.append("Weak / avoid zone:")
-            lines.append("- " + ", ".join(avoids))
-
-    lines.append("Built from live Yahoo Finance data with adaptive pullback logic.")
+    lines.append("Built from live Yahoo Finance price, structure, multi-timeframe, and headline sentiment data.")
     return "\n".join(lines)
 
 
-st.markdown('<div class="main-title">Market Math Analyzer V3</div>', unsafe_allow_html=True)
+def build_alerts(result: pd.DataFrame) -> pd.DataFrame:
+    if result.empty:
+        return pd.DataFrame()
+    alerts = result.copy()
+    alerts = alerts[(alerts["decision"] == "BUY") | ((alerts["decision"] == "HOLD / WAIT") & (alerts["distance_from_buy_pct"] <= 2.5))]
+    if alerts.empty:
+        return alerts
+    alerts = alerts.sort_values(["entry_score", "distance_from_buy_pct"], ascending=[False, True])
+    return alerts[[c for c in ["symbol", "decision", "price", "preferred_buy_price", "distance_from_buy_pct", "entry_score", "confidence", "notes"] if c in alerts.columns]].head(8)
+
+
+def run_backtest(symbol: str, holding_days: int = 10, stop_loss_pct: float = 0.05, take_profit_pct: float = 0.10) -> dict:
+    history = get_symbol_history(symbol, period="2y", interval="1d")
+    if history.empty or len(history) < 250:
+        return {"trades": 0, "win_rate": 0.0, "avg_return": 0.0, "equity_return": 0.0, "max_drawdown": 0.0, "results": pd.DataFrame()}
+
+    history = history.copy().dropna(subset=["Close", "RSI14", "MACD", "MACD_SIGNAL", "EMA21", "ATR_PCT", "LOW20", "LOW60", "HIGH20"])
+    trades = []
+    for idx in range(60, len(history) - holding_days - 1):
+        subset = history.iloc[: idx + 1]
+        row = history.iloc[idx]
+        current_price = safe_float(row["Close"], 0.0)
+        levels = detect_support_resistance(subset.tail(120), current_price)
+        preferred_buy = infer_dynamic_buy_price(symbol, subset, current_price, levels=levels)
+        mtf_score = 60.0 if current_price > safe_float(row.get("EMA50"), current_price) else 40.0
+        result = analyze_pullback_setup(
+            symbol=symbol,
+            current_price=current_price,
+            rsi=safe_float(row["RSI14"], 50.0),
+            macd=safe_float(row["MACD"], 0.0),
+            macd_signal=safe_float(row["MACD_SIGNAL"], 0.0),
+            preferred_buy=preferred_buy,
+            support=levels["support"],
+            resistance=levels["resistance"],
+            mtf_score=mtf_score,
+            news_score=0.0,
+            atr_pct=safe_float(row["ATR_PCT"], 0.03),
+            volume_ratio=safe_float(row.get("VOLUME_RATIO"), 1.0),
+        )
+        if result["decision"] != "BUY":
+            continue
+
+        entry = current_price
+        future = history.iloc[idx + 1: idx + 1 + holding_days]
+        stop_price = entry * (1 - stop_loss_pct)
+        take_price = entry * (1 + take_profit_pct)
+        exit_price = safe_float(future["Close"].iloc[-1], entry)
+        outcome = "timeout"
+
+        for _, frow in future.iterrows():
+            low = safe_float(frow.get("Low"), exit_price)
+            high = safe_float(frow.get("High"), exit_price)
+            if low <= stop_price:
+                exit_price = stop_price
+                outcome = "stop"
+                break
+            if high >= take_price:
+                exit_price = take_price
+                outcome = "target"
+                break
+
+        trade_return = (exit_price - entry) / entry
+        trades.append({
+            "entry_date": subset.index[-1],
+            "entry": entry,
+            "exit": exit_price,
+            "return_pct": trade_return * 100,
+            "outcome": outcome,
+        })
+
+    if not trades:
+        return {"trades": 0, "win_rate": 0.0, "avg_return": 0.0, "equity_return": 0.0, "max_drawdown": 0.0, "results": pd.DataFrame()}
+
+    results = pd.DataFrame(trades)
+    results["equity_curve"] = (1 + results["return_pct"] / 100).cumprod()
+    peak = results["equity_curve"].cummax()
+    dd = (results["equity_curve"] / peak) - 1
+
+    return {
+        "trades": int(len(results)),
+        "win_rate": round(float((results["return_pct"] > 0).mean() * 100), 1),
+        "avg_return": round(float(results["return_pct"].mean()), 2),
+        "equity_return": round(float((results["equity_curve"].iloc[-1] - 1) * 100), 2),
+        "max_drawdown": round(float(dd.min() * 100), 2),
+        "results": results,
+    }
+
+
+st.markdown('<div class="main-title">Market Math Analyzer V3 Pro</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub-title">Adaptive pullback intelligence with dynamic buy zones, cleaner metrics, and share-ready summaries.</div>',
+    '<div class="sub-title">Sunset pullback engine with adaptive buy zones, support and resistance, multi-timeframe confirmation, sentiment, portfolio sizing, alerts, and first-pass backtesting.</div>',
     unsafe_allow_html=True,
 )
 
@@ -761,37 +1046,34 @@ with st.sidebar:
     period = st.selectbox("History period", options=["3mo", "6mo", "1y", "2y"], index=2)
     interval = st.selectbox("Data interval", options=["1d", "1h"], index=0)
     min_entry_score = st.slider("Minimum entry score", min_value=0, max_value=100, value=0, step=5)
-
-    decision_options = ["ALL", "BUY", "HOLD / WAIT", "AVOID"]
-    selected_decision = st.selectbox("Decision filter", options=decision_options, index=0)
+    selected_decision = st.selectbox("Decision filter", options=["ALL", "BUY", "HOLD / WAIT", "AVOID"], index=0)
+    include_news = st.toggle("Include Yahoo Finance headlines", value=True)
 
     if st.button("Refresh market data", width="stretch"):
         st.cache_data.clear()
         st.rerun()
 
     st.divider()
-    st.subheader("Watchlist editor")
+    st.subheader("Portfolio / risk")
+    account_size = st.number_input("Account size ($)", min_value=100.0, value=10000.0, step=500.0)
+    risk_pct = st.number_input("Risk per trade (%)", min_value=0.25, max_value=10.0, value=1.0, step=0.25)
+    max_exposure_pct = st.number_input("Max position exposure (%)", min_value=1.0, max_value=100.0, value=15.0, step=1.0)
 
+    st.divider()
+    st.subheader("Watchlist editor")
     preset_symbols = [
         "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD", "DOGE-USD",
         "HBAR-USD", "ATOM-USD", "BNB-USD", "AVAX-USD", "LINK-USD",
         "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "GOOGL",
         "MSTR", "COIN", "SPY", "QQQ", "GLD", "SLV", "IBIT",
     ]
-
     if "watchlist_editor" not in st.session_state:
         st.session_state.watchlist_editor = "\n".join(current_watchlist())
 
     chosen_presets = st.multiselect("Add common tickers", options=preset_symbols)
     st.caption("Search any Yahoo Finance ticker, validate it, then add it to your watchlist.")
-
-    search_ticker = st.text_input(
-        "Ticker search",
-        placeholder="Example: BTC-USD, SOL-USD, AAPL, MSTR, IBIT",
-    )
-
+    search_ticker = st.text_input("Ticker search", placeholder="Example: BTC-USD, SOL-USD, AAPL, MSTR, IBIT")
     col_check, col_add = st.columns(2)
-
     with col_check:
         if st.button("Check ticker", width="stretch"):
             ticker = search_ticker.strip().upper()
@@ -801,12 +1083,10 @@ with st.sidebar:
                 st.success(f"{ticker} is available.")
             else:
                 st.error(f"{ticker} was not found or has no recent data.")
-
     with col_add:
         if st.button("Add ticker", width="stretch"):
             ticker = search_ticker.strip().upper()
             current_lines = [x.strip().upper() for x in st.session_state.watchlist_editor.splitlines() if x.strip()]
-
             if not ticker:
                 st.warning("Enter a ticker first.")
             elif not validate_ticker(ticker):
@@ -819,7 +1099,6 @@ with st.sidebar:
                 st.success(f"Added {ticker} to the watchlist editor.")
 
     editable_watchlist = st.text_area("Current watchlist", key="watchlist_editor", height=220)
-
     if st.button("Save watchlist", width="stretch"):
         lines = editable_watchlist.splitlines()
         lines.extend(chosen_presets)
@@ -830,7 +1109,6 @@ with st.sidebar:
     st.divider()
     st.subheader("Formulas editor")
     formulas_text = st.text_area("Custom formulas", value=read_text_file(FORMULAS_FILE), height=180)
-
     if st.button("Save formulas", width="stretch"):
         save_formulas(formulas_text)
         st.cache_data.clear()
@@ -839,11 +1117,11 @@ with st.sidebar:
     st.divider()
     st.caption(f"Project folder: {BASE_DIR}")
 
-st.info("🌅 Scanning adaptive pullback setups across your sunset board...")
+st.info("🌅 Scanning pullback setups with structure, timeframes, and headlines...")
 
-with st.spinner("Scanning adaptive pullback setups across your sunset board..."):
+with st.spinner("Scanning pullback setups with structure, timeframes, and headlines..."):
     result = get_analysis(period=period, interval=interval)
-    result = enrich_results_with_pullback_system(result, period=period, interval=interval)
+    result = enrich_results_with_pullback_system(result, period=period, interval=interval, include_news=include_news)
 
 if result.empty:
     st.warning("No results returned. Check your watchlist, formulas, or internet connection.")
@@ -860,36 +1138,41 @@ if "entry_score" in filtered.columns:
 
 crypto_df = result[result["asset_class"] == "Crypto"].copy()
 stock_df = result[result["asset_class"] == "Stock / ETF"].copy()
-
 crypto_title, crypto_detail = classify_group_outlook(crypto_df, "Crypto outlook")
 stock_title, stock_detail = classify_group_outlook(stock_df, "Stock outlook")
-
 summary_lines = build_top_summary(result, top_n=5)
 share_text = build_share_text(result, crypto_title, stock_title)
+alerts_df = build_alerts(result)
 
-top1, top2, top3, top4 = st.columns(4)
-with top1:
+c1, c2, c3, c4 = st.columns(4)
+with c1:
     st.metric("Tracked symbols", len(result))
-with top2:
-    actionable = int(result["decision"].eq("BUY").sum()) if "decision" in result.columns else 0
-    st.metric("Buy-ready setups", actionable)
-with top3:
-    avg_score = round(float(result["entry_score"].mean()), 1) if "entry_score" in result.columns else 0.0
-    st.metric("Average entry score", avg_score)
-with top4:
-    st.metric("Crypto / Stock split", f"{len(crypto_df)} / {len(stock_df)}")
+with c2:
+    st.metric("Buy-ready setups", int(result["decision"].eq("BUY").sum()))
+with c3:
+    st.metric("Average entry score", round(float(result["entry_score"].mean()), 1))
+with c4:
+    st.metric("Alert-ready", len(alerts_df))
 
 card1, card2 = st.columns(2)
 with card1:
-    st.markdown(
-        f'<div class="accent-card"><strong>{crypto_title}</strong><br><span class="small-note">{crypto_detail}</span></div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="accent-card"><strong>{crypto_title}</strong><br><span class="small-note">{crypto_detail}</span></div>', unsafe_allow_html=True)
 with card2:
-    st.markdown(
-        f'<div class="accent-card-soft"><strong>{stock_title}</strong><br><span class="small-note">{stock_detail}</span></div>',
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="accent-card-soft"><strong>{stock_title}</strong><br><span class="small-note">{stock_detail}</span></div>', unsafe_allow_html=True)
+
+st.subheader("Alert center")
+if alerts_df.empty:
+    st.write("No alert-ready setups right now.")
+else:
+    for _, arow in alerts_df.iterrows():
+        badge = signal_badge_html(str(arow.get("decision", "")), "Strong" if safe_float(arow.get("entry_score"), 0) >= 75 else "Moderate")
+        st.markdown(
+            f'<div class="alert-card">{badge}<br><strong>{arow.get("symbol", "-")}</strong> '
+            f'near trigger zone — price ${safe_float(arow.get("price"), 0):,.2f} | preferred buy ${safe_float(arow.get("preferred_buy_price"), 0):,.2f} '
+            f'| distance {safe_float(arow.get("distance_from_buy_pct"), 0):.2f}% | score {safe_float(arow.get("entry_score"), 0):.1f}<br>'
+            f'<span class="small-note">{arow.get("notes", "")}</span></div>',
+            unsafe_allow_html=True,
+        )
 
 left, right = st.columns([1.05, 1.25])
 with left:
@@ -898,56 +1181,55 @@ with left:
         for item in summary_lines:
             badge = signal_badge_html(item["decision"], item["entry_quality"])
             st.markdown(
-                f'<div class="setup-line">'
-                f'{badge}'
-                f'<div class="setup-title">{item["symbol"]} — price {item["price"]} | buy zone {item["preferred"]}</div>'
-                f'<div class="setup-note">Distance {item["distance"]} | Score {item["score"]} | {item["notes"]}</div>'
-                f'</div>',
+                f'<div class="setup-line">{badge}<div class="setup-title">{item["symbol"]} — price {item["price"]} | buy zone {item["preferred"]}</div>'
+                f'<div class="setup-note">Wait price {item["wait_price"]} | Distance {item["distance"]} | Score {item["score"]} | {item["notes"]}</div></div>',
                 unsafe_allow_html=True,
             )
     else:
         st.write("No buy-ready pullback setups right now.")
-
 with right:
     st.subheader("Share with friends")
     st.caption("Copy this summary into a text message, Slack, or social post.")
     st.text_area("Share-ready summary", value=share_text, height=220)
 
 st.subheader("Results")
-
 preferred_order = [
-    "symbol", "asset_class", "price", "decision", "confidence", "entry_score",
-    "preferred_buy_price", "distance_from_buy_pct", "trend_label", "momentum_label",
-    "entry_quality", "1d_%", "5d_%", "20d_%", "rsi_14", "macd", "macd_signal", "notes",
+    "symbol", "asset_class", "price", "decision", "confidence", "entry_score", "preferred_buy_price", "wait_price",
+    "distance_from_buy_pct", "support", "resistance", "mtf_label", "mtf_score", "news_sentiment_label",
+    "news_sentiment_score", "trend_label", "momentum_label", "entry_quality", "rsi_14", "macd", "macd_signal", "notes",
 ]
 existing_cols = [col for col in preferred_order if col in filtered.columns]
 display_df = filtered[existing_cols].copy()
-
-if "distance_from_buy_pct" in display_df.columns:
-    display_df["distance_from_buy_pct"] = display_df["distance_from_buy_pct"].map(
-        lambda x: f"{float(x):.2f}%" if pd.notna(x) else "-"
-    )
-
-if "entry_score" in display_df.columns:
-    display_df["entry_score"] = display_df["entry_score"].map(lambda x: f"{float(x):.1f}" if pd.notna(x) else "-")
-
-if "price" in display_df.columns:
-    display_df["price"] = display_df["price"].map(lambda x: f"${float(x):,.2f}" if pd.notna(x) else "-")
-
-if "preferred_buy_price" in display_df.columns:
-    display_df["preferred_buy_price"] = display_df["preferred_buy_price"].map(
-        lambda x: f"${float(x):,.2f}" if pd.notna(x) else "-"
-    )
-
+for col in ["distance_from_buy_pct", "news_sentiment_score"]:
+    if col in display_df.columns:
+        display_df[col] = display_df[col].map(lambda x: f"{float(x):.2f}%" if pd.notna(x) and col == "distance_from_buy_pct" else (f"{float(x):.3f}" if pd.notna(x) else "-"))
+for col in ["entry_score", "mtf_score", "rsi_14"]:
+    if col in display_df.columns:
+        display_df[col] = display_df[col].map(lambda x: f"{float(x):.1f}" if pd.notna(x) else "-")
+for col in ["price", "preferred_buy_price", "wait_price", "support", "resistance"]:
+    if col in display_df.columns:
+        display_df[col] = display_df[col].map(lambda x: f"${float(x):,.2f}" if pd.notna(x) else "-")
 st.dataframe(display_df, width="stretch", hide_index=True)
 
 st.subheader("Single symbol detail")
 symbols = filtered["symbol"].dropna().tolist() if "symbol" in filtered.columns else []
-
 if symbols:
     selected_symbol = st.selectbox("Choose a symbol", options=symbols)
     selected_row = filtered[filtered["symbol"] == selected_symbol].iloc[0]
     history = get_symbol_history(selected_symbol, period=period, interval=interval)
+    mtf = multi_timeframe_confirmation(selected_symbol)
+    news = get_news_sentiment(selected_symbol) if include_news else {"top_headlines": [], "news_sentiment_label": "Neutral", "news_sentiment_score": 0.0}
+    trade_plan = estimate_trade_plan(
+        current_price=safe_float(selected_row.get("price"), 0.0),
+        preferred_buy=safe_float(selected_row.get("preferred_buy_price"), 0.0),
+        support=safe_float(selected_row.get("support"), 0.0),
+        resistance=safe_float(selected_row.get("resistance"), 0.0),
+        atr_pct=safe_float(history["ATR_PCT"].tail(1).mean(), 0.03) if not history.empty and "ATR_PCT" in history.columns else 0.03,
+        account_size=account_size,
+        risk_pct=risk_pct,
+        max_exposure_pct=max_exposure_pct,
+    )
+    backtest = run_backtest(selected_symbol)
 
     d1, d2, d3, d4 = st.columns(4)
     detail_metrics = [
@@ -956,29 +1238,83 @@ if symbols:
         ("Entry score", f"{safe_float(selected_row.get('entry_score')):.1f}"),
         ("Confidence", selected_row.get("confidence", "-")),
         ("Preferred buy", f"${safe_float(selected_row.get('preferred_buy_price')):,.2f}"),
-        ("Distance from buy", f"{safe_float(selected_row.get('distance_from_buy_pct')):.2f}%"),
-        ("RSI 14", f"{safe_float(selected_row.get('rsi_14')):.1f}"),
-        ("MACD", f"{safe_float(selected_row.get('macd')):.4f}"),
+        ("Support", f"${safe_float(selected_row.get('support')):,.2f}"),
+        ("Resistance", f"${safe_float(selected_row.get('resistance')):,.2f}"),
+        ("Wait price", f"${safe_float(selected_row.get('wait_price')):,.2f}"),
     ]
     columns = [d1, d2, d3, d4]
     for idx, (label, value) in enumerate(detail_metrics):
         columns[idx % 4].metric(label, value)
 
-    decision_text = str(selected_row.get("decision", "-"))
-    badge = signal_badge_html(decision_text, str(selected_row.get("entry_quality", "")))
+    badge = signal_badge_html(str(selected_row.get("decision", "")), str(selected_row.get("entry_quality", "")))
     st.markdown(
-        f'<div class="accent-card">{badge}<br><span class="{decision_class(decision_text)}">{decision_text}</span><br>'
+        f'<div class="accent-card">{badge}<br><span class="{decision_class(str(selected_row.get("decision", "-")))}">{selected_row.get("decision", "-")}</span><br>'
         f'<span class="small-note">{selected_row.get("notes", "-")}</span></div>',
         unsafe_allow_html=True,
     )
+
+    lcol, rcol = st.columns(2)
+    with lcol:
+        st.markdown(
+            f'<div class="accent-card-soft"><strong>Multi-timeframe confirmation</strong><br>'
+            f'<span class="small-note">1H: {selected_row.get("mtf_hourly", "-")} | 1D: {selected_row.get("mtf_daily", "-")} | 1W: {selected_row.get("mtf_weekly", "-")}<br>'
+            f'Label: {selected_row.get("mtf_label", "-")} | Score: {safe_float(selected_row.get("mtf_score"), 0):.1f}<br>'
+            f'{mtf.get("mtf_reason", "")}</span></div>',
+            unsafe_allow_html=True,
+        )
+    with rcol:
+        st.markdown(
+            f'<div class="accent-card-soft"><strong>News sentiment</strong><br>'
+            f'<span class="small-note">Sentiment: {selected_row.get("news_sentiment_label", "Neutral")} | '
+            f'Score: {safe_float(selected_row.get("news_sentiment_score"), 0):.3f} | Headlines: {int(safe_float(selected_row.get("news_headline_count"), 0))}</span></div>',
+            unsafe_allow_html=True,
+        )
+        if news.get("top_headlines"):
+            for headline in news["top_headlines"][:3]:
+                st.write(f"- {headline}")
+
+    st.subheader("Trade plan")
+    t1, t2, t3, t4 = st.columns(4)
+    with t1:
+        st.metric("Entry", f"${trade_plan['entry_price']:,.2f}")
+    with t2:
+        st.metric("Stop", f"${trade_plan['stop_price']:,.2f}")
+    with t3:
+        st.metric("Target", f"${trade_plan['target_price']:,.2f}")
+    with t4:
+        st.metric("R:R", f"{trade_plan['rr_ratio']:.2f}")
+    t5, t6, t7 = st.columns(3)
+    with t5:
+        st.metric("Suggested units", f"{trade_plan['units']:,.4f}")
+    with t6:
+        st.metric("Position value", f"${trade_plan['position_value']:,.2f}")
+    with t7:
+        st.metric("Capital at risk", f"${trade_plan['capital_at_risk']:,.2f}")
+
+    st.subheader("Backtest snapshot")
+    b1, b2, b3, b4 = st.columns(4)
+    with b1:
+        st.metric("Trades", backtest["trades"])
+    with b2:
+        st.metric("Win rate", f"{backtest['win_rate']:.1f}%")
+    with b3:
+        st.metric("Avg return", f"{backtest['avg_return']:.2f}%")
+    with b4:
+        st.metric("Max drawdown", f"{backtest['max_drawdown']:.2f}%")
+    if isinstance(backtest.get("results"), pd.DataFrame) and not backtest["results"].empty:
+        bt_df = backtest["results"].copy()
+        bt_df["entry_date"] = bt_df["entry_date"].astype(str)
+        st.dataframe(bt_df.tail(15), width="stretch", hide_index=True)
 
     if not history.empty and "Close" in history.columns:
         st.write("**Price chart**")
         chart_df = history[["Close"]].copy().tail(120)
         chart_df["Preferred Buy"] = safe_float(selected_row.get("preferred_buy_price"))
+        chart_df["Support"] = safe_float(selected_row.get("support"))
+        chart_df["Resistance"] = safe_float(selected_row.get("resistance"))
         if "EMA21" in history.columns:
             chart_df["EMA21"] = history["EMA21"].tail(len(chart_df))
-        st.line_chart(chart_df, height=340)
+        st.line_chart(chart_df, height=360)
 else:
     st.write("No symbols available after filtering.")
 
@@ -986,8 +1322,9 @@ csv_data = filtered.to_csv(index=False).encode("utf-8")
 st.download_button(
     label="Download results as CSV",
     data=csv_data,
-    file_name="market_math_results_v3_adaptive.csv",
+    file_name="market_math_results_v3_pro.csv",
     mime="text/csv",
     width="stretch",
 )
+
 
