@@ -1,13 +1,23 @@
+
 from __future__ import annotations
 
-from pathlib import Path
-from typing import List, Tuple
 import math
+import os
 import re
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
+
+try:
+    from supabase import Client, create_client
+except Exception:
+    Client = object  # type: ignore
+    create_client = None  # type: ignore
 
 from market_math_analyzer_v2 import (
     BASE_DIR,
@@ -17,7 +27,7 @@ from market_math_analyzer_v2 import (
     run_analysis,
 )
 
-st.set_page_config(page_title="Market Math Analyzer V3 Pro", layout="wide")
+st.set_page_config(page_title="Market Math Analyzer V4 Pro", layout="wide")
 
 CRYPTO_SUFFIXES = ("-USD", "-USDT", "-USDC")
 CRYPTO_KEYWORDS = {
@@ -72,6 +82,13 @@ NEGATIVE_WORDS = {
     "uncertain", "volatility", "volatile", "cuts", "cut", "recession", "tariff", "ban",
 }
 
+CHART_PERIOD_OPTIONS = ["5d", "1mo", "3mo", "6mo", "1y", "2y", "5y"]
+DEFAULT_WATCHLIST = [
+    "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD", "DOGE-USD",
+    "HBAR-USD", "ATOM-USD", "BNB-USD", "AAPL", "MSFT", "NVDA", "TSLA",
+    "AMZN", "META", "GOOGL", "SPY", "QQQ", "GLD", "SLV",
+]
+
 st.markdown(
     """
     <style>
@@ -82,13 +99,7 @@ st.markdown(
             linear-gradient(180deg, #1f1029 0%, #34142f 24%, #5b2245 48%, #8a3b4a 72%, #f09a61 100%);
         color: #fff7ef;
     }
-    .main-title {
-        color: #fff7ef;
-        font-size: 2rem;
-        font-weight: 800;
-        margin-bottom: 0.15rem;
-        text-shadow: 0 0 14px rgba(255, 182, 92, 0.22);
-    }
+    .main-title { color: #fff7ef; font-size: 2rem; font-weight: 800; margin-bottom: 0.15rem; text-shadow: 0 0 14px rgba(255, 182, 92, 0.22); }
     .sub-title { color: #ffd7c0; margin-bottom: 1rem; }
     div[data-testid="stMetric"] {
         background: linear-gradient(180deg, rgba(66, 25, 56, 0.92) 0%, rgba(37, 16, 46, 0.94) 100%);
@@ -150,9 +161,12 @@ st.markdown(
     }
     .setup-title { color: #fff7ef; font-weight: 800; margin-bottom: 0.2rem; }
     .setup-note { color: #ffd7c0; font-size: 0.92rem; }
-    .stAlert {
-        background: rgba(66, 25, 56, 0.80) !important; color: #fff7ef !important;
-        border: 1px solid rgba(255, 190, 120, 0.20) !important;
+    .overview-box {
+        background: linear-gradient(180deg, rgba(66, 25, 56, 0.72) 0%, rgba(37, 16, 46, 0.92) 100%);
+        border: 1px solid rgba(255, 190, 120, 0.18);
+        border-radius: 18px;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
     }
     </style>
     """,
@@ -193,6 +207,313 @@ def format_value(value, is_percent: bool = False) -> str:
     return f"{f:.2f}"
 
 
+def get_secret_value(name: str, default: str = "") -> str:
+    try:
+        if name in st.secrets:
+            return str(st.secrets[name])
+    except Exception:
+        pass
+    return os.getenv(name, default)
+
+
+@st.cache_resource(show_spinner=False)
+def get_supabase_client() -> Optional[Client]:
+    url = get_secret_value("SUPABASE_URL")
+    key = get_secret_value("SUPABASE_ANON_KEY")
+    if not url or not key or create_client is None:
+        return None
+    try:
+        return create_client(url, key)
+    except Exception:
+        return None
+
+
+def supabase_ready() -> bool:
+    return get_supabase_client() is not None
+
+
+def get_current_user_id() -> Optional[str]:
+    session = st.session_state.get("sb_session")
+    if not session:
+        return None
+    user = getattr(session, "user", None)
+    if user is None and isinstance(session, dict):
+        user = session.get("user")
+    if user is None:
+        return None
+    return getattr(user, "id", None) or (user.get("id") if isinstance(user, dict) else None)
+
+
+def get_current_user_email() -> Optional[str]:
+    session = st.session_state.get("sb_session")
+    if not session:
+        return None
+    user = getattr(session, "user", None)
+    if user is None and isinstance(session, dict):
+        user = session.get("user")
+    if user is None:
+        return None
+    return getattr(user, "email", None) or (user.get("email") if isinstance(user, dict) else None)
+
+
+def restore_supabase_session() -> None:
+    client = get_supabase_client()
+    if client is None:
+        return
+    if st.session_state.get("sb_session") is not None:
+        return
+    access = st.session_state.get("sb_access_token")
+    refresh = st.session_state.get("sb_refresh_token")
+    if not access or not refresh:
+        return
+    try:
+        session = client.auth.set_session(access, refresh)
+        st.session_state["sb_session"] = session
+    except Exception:
+        st.session_state.pop("sb_access_token", None)
+        st.session_state.pop("sb_refresh_token", None)
+        st.session_state.pop("sb_session", None)
+
+
+def persist_session_tokens(session) -> None:
+    access_token = getattr(session, "access_token", None) or (session.get("access_token") if isinstance(session, dict) else None)
+    refresh_token = getattr(session, "refresh_token", None) or (session.get("refresh_token") if isinstance(session, dict) else None)
+    if access_token:
+        st.session_state["sb_access_token"] = access_token
+    if refresh_token:
+        st.session_state["sb_refresh_token"] = refresh_token
+    st.session_state["sb_session"] = session
+
+
+def auth_sign_up(email: str, password: str) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    if client is None:
+        return False, "Supabase is not configured yet."
+    try:
+        response = client.auth.sign_up({"email": email, "password": password})
+        session = getattr(response, "session", None) or (response.get("session") if isinstance(response, dict) else None)
+        if session:
+            persist_session_tokens(session)
+        return True, "Account created. Check your email if confirmation is enabled."
+    except Exception as exc:
+        return False, f"Signup failed: {exc}"
+
+
+def auth_sign_in(email: str, password: str) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    if client is None:
+        return False, "Supabase is not configured yet."
+    try:
+        response = client.auth.sign_in_with_password({"email": email, "password": password})
+        session = getattr(response, "session", None) or (response.get("session") if isinstance(response, dict) else response)
+        persist_session_tokens(session)
+        return True, "Signed in successfully."
+    except Exception as exc:
+        return False, f"Login failed: {exc}"
+
+
+def auth_sign_out() -> Tuple[bool, str]:
+    client = get_supabase_client()
+    try:
+        if client is not None:
+            client.auth.sign_out()
+        for key in ["sb_access_token", "sb_refresh_token", "sb_session"]:
+            st.session_state.pop(key, None)
+        return True, "Signed out."
+    except Exception as exc:
+        return False, f"Logout failed: {exc}"
+
+
+def local_watchlist() -> List[str]:
+    symbols = load_watchlist()
+    return symbols if symbols else DEFAULT_WATCHLIST.copy()
+
+
+def local_formulas() -> str:
+    if FORMULAS_FILE.exists():
+        return FORMULAS_FILE.read_text(encoding="utf-8")
+    return ""
+
+
+def save_local_watchlist(symbols: List[str]) -> None:
+    cleaned: List[str] = []
+    seen = set()
+    for symbol in symbols:
+        s = symbol.strip().upper()
+        if s and s not in seen:
+            cleaned.append(s)
+            seen.add(s)
+    content = "\n".join(cleaned)
+    if content:
+        content += "\n"
+    WATCHLIST_FILE.write_text(content, encoding="utf-8")
+
+
+def save_local_formulas(text: str) -> None:
+    content = text.strip()
+    if content:
+        content += "\n"
+    FORMULAS_FILE.write_text(content, encoding="utf-8")
+
+
+def load_user_watchlist() -> List[str]:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return local_watchlist()
+    try:
+        rows = client.table("user_watchlists").select("symbols").eq("user_id", user_id).limit(1).execute()
+        data = getattr(rows, "data", None) or []
+        if data and data[0].get("symbols"):
+            return [str(x).upper() for x in data[0]["symbols"] if str(x).strip()]
+    except Exception:
+        pass
+    return local_watchlist()
+
+
+def save_user_watchlist(symbols: List[str]) -> Tuple[bool, str]:
+    cleaned: List[str] = []
+    seen = set()
+    for symbol in symbols:
+        s = symbol.strip().upper()
+        if s and s not in seen:
+            cleaned.append(s)
+            seen.add(s)
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        save_local_watchlist(cleaned)
+        return True, "Watchlist saved locally."
+    try:
+        client.table("user_watchlists").upsert({"user_id": user_id, "symbols": cleaned}, on_conflict="user_id").execute()
+        return True, "Watchlist saved to your account."
+    except Exception as exc:
+        save_local_watchlist(cleaned)
+        return False, f"Supabase save failed, so it was saved locally instead: {exc}"
+
+
+def load_user_formulas() -> str:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return local_formulas()
+    try:
+        rows = client.table("user_formulas").select("formula_text").eq("user_id", user_id).limit(1).execute()
+        data = getattr(rows, "data", None) or []
+        if data:
+            return str(data[0].get("formula_text") or "")
+    except Exception:
+        pass
+    return local_formulas()
+
+
+def save_user_formulas(text: str) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    cleaned = text.strip()
+    if client is None or user_id is None:
+        save_local_formulas(cleaned)
+        return True, "Formulas saved locally."
+    try:
+        client.table("user_formulas").upsert({"user_id": user_id, "formula_text": cleaned}, on_conflict="user_id").execute()
+        return True, "Formulas saved to your account."
+    except Exception as exc:
+        save_local_formulas(cleaned)
+        return False, f"Supabase save failed, so formulas were saved locally instead: {exc}"
+
+
+def load_user_preferences(defaults: Dict[str, object]) -> Dict[str, object]:
+    prefs = defaults.copy()
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return prefs
+    try:
+        rows = client.table("user_preferences").select("preferences").eq("user_id", user_id).limit(1).execute()
+        data = getattr(rows, "data", None) or []
+        if data and isinstance(data[0].get("preferences"), dict):
+            prefs.update(data[0]["preferences"])
+    except Exception:
+        pass
+    return prefs
+
+
+def save_user_preferences(preferences: Dict[str, object]) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return False, "Preferences require Supabase login to persist across devices."
+    try:
+        client.table("user_preferences").upsert({"user_id": user_id, "preferences": preferences}, on_conflict="user_id").execute()
+        return True, "Preferences saved to your account."
+    except Exception as exc:
+        return False, f"Could not save preferences: {exc}"
+
+
+def load_alert_rows() -> pd.DataFrame:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return pd.DataFrame(columns=["id", "symbol", "alert_type", "target_value", "note", "is_active", "created_at"])
+    try:
+        rows = client.table("user_alerts").select("id,symbol,alert_type,target_value,note,is_active,created_at").eq("user_id", user_id).order("created_at", desc=True).execute()
+        return pd.DataFrame(getattr(rows, "data", None) or [])
+    except Exception:
+        return pd.DataFrame(columns=["id", "symbol", "alert_type", "target_value", "note", "is_active", "created_at"])
+
+
+def add_alert(symbol: str, alert_type: str, target_value: float, note: str) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return False, "Login required to save alerts."
+    try:
+        client.table("user_alerts").insert({
+            "user_id": user_id,
+            "symbol": symbol.upper(),
+            "alert_type": alert_type,
+            "target_value": target_value,
+            "note": note.strip(),
+            "is_active": True,
+        }).execute()
+        return True, "Alert saved."
+    except Exception as exc:
+        return False, f"Could not add alert: {exc}"
+
+
+def load_trade_journal() -> pd.DataFrame:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return pd.DataFrame(columns=["id", "symbol", "side", "entry_price", "thesis", "status", "created_at"])
+    try:
+        rows = client.table("trade_journal").select("id,symbol,side,entry_price,stop_price,target_price,thesis,status,created_at").eq("user_id", user_id).order("created_at", desc=True).execute()
+        return pd.DataFrame(getattr(rows, "data", None) or [])
+    except Exception:
+        return pd.DataFrame(columns=["id", "symbol", "side", "entry_price", "thesis", "status", "created_at"])
+
+
+def add_trade_journal_entry(symbol: str, side: str, entry_price: float, stop_price: float, target_price: float, thesis: str, status: str) -> Tuple[bool, str]:
+    client = get_supabase_client()
+    user_id = get_current_user_id()
+    if client is None or user_id is None:
+        return False, "Login required to save journal entries."
+    try:
+        client.table("trade_journal").insert({
+            "user_id": user_id,
+            "symbol": symbol.upper(),
+            "side": side,
+            "entry_price": entry_price,
+            "stop_price": stop_price,
+            "target_price": target_price,
+            "thesis": thesis.strip(),
+            "status": status,
+        }).execute()
+        return True, "Journal entry saved."
+    except Exception as exc:
+        return False, f"Could not save journal entry: {exc}"
+
+
 @st.cache_data(ttl=300, show_spinner=False)
 def get_analysis(period: str, interval: str) -> pd.DataFrame:
     return run_analysis(period=period, interval=interval)
@@ -222,13 +543,17 @@ def get_symbol_history(symbol: str, period: str, interval: str) -> pd.DataFrame:
     rs = avg_gain / avg_loss.replace(0, pd.NA)
     df["RSI14"] = (100 - (100 / (1 + rs))).fillna(50.0)
 
+    ema9 = close.ewm(span=9, adjust=False).mean()
     ema12 = close.ewm(span=12, adjust=False).mean()
     ema26 = close.ewm(span=26, adjust=False).mean()
+    df["EMA9"] = ema9
     df["MACD"] = ema12 - ema26
     df["MACD_SIGNAL"] = df["MACD"].ewm(span=9, adjust=False).mean()
     df["EMA21"] = close.ewm(span=21, adjust=False).mean()
     df["EMA50"] = close.ewm(span=50, adjust=False).mean()
     df["EMA200"] = close.ewm(span=200, adjust=False).mean()
+    df["SMA20"] = close.rolling(20).mean()
+    df["SMA50"] = close.rolling(50).mean()
 
     prev_close = close.shift(1)
     tr_components = pd.concat(
@@ -261,42 +586,46 @@ def get_multi_timeframe_history(symbol: str) -> Tuple[pd.DataFrame, pd.DataFrame
     return hourly, daily, weekly
 
 
-def read_text_file(path: Path) -> str:
-    if path.exists():
-        return path.read_text(encoding="utf-8")
-    return ""
+@st.cache_data(ttl=900, show_spinner=False)
+def get_symbol_profile(symbol: str) -> dict:
+    try:
+        ticker = yf.Ticker(symbol)
+        info = ticker.fast_info if hasattr(ticker, "fast_info") else {}
+        if hasattr(info, "items"):
+            info = dict(info)
+        basic = ticker.info if hasattr(ticker, "info") else {}
+    except Exception:
+        info = {}
+        basic = {}
+    profile = {}
+    profile["market_cap"] = basic.get("marketCap") or info.get("market_cap")
+    profile["fifty_two_week_high"] = basic.get("fiftyTwoWeekHigh") or info.get("year_high")
+    profile["fifty_two_week_low"] = basic.get("fiftyTwoWeekLow") or info.get("year_low")
+    profile["day_high"] = basic.get("dayHigh") or info.get("day_high")
+    profile["day_low"] = basic.get("dayLow") or info.get("day_low")
+    profile["volume"] = basic.get("volume") or info.get("last_volume")
+    profile["average_volume"] = basic.get("averageVolume") or basic.get("averageVolume10days")
+    profile["exchange"] = basic.get("exchange") or info.get("exchange")
+    profile["quote_type"] = basic.get("quoteType")
+    profile["short_name"] = basic.get("shortName") or basic.get("longName") or symbol
+    return profile
 
 
-def save_watchlist(symbols: List[str]) -> None:
-    cleaned: List[str] = []
-    seen = set()
-    for symbol in symbols:
-        s = symbol.strip().upper()
-        if s and s not in seen:
-            cleaned.append(s)
-            seen.add(s)
-    content = "\n".join(cleaned)
-    if content:
-        content += "\n"
-    WATCHLIST_FILE.write_text(content, encoding="utf-8")
-
-
-def save_formulas(text: str) -> None:
-    content = text.strip()
-    if content:
-        content += "\n"
-    FORMULAS_FILE.write_text(content, encoding="utf-8")
-
-
-def current_watchlist() -> List[str]:
-    symbols = load_watchlist()
-    if symbols:
-        return symbols
-    return [
-        "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD", "DOGE-USD",
-        "HBAR-USD", "ATOM-USD", "BNB-USD", "AAPL", "MSFT", "NVDA", "TSLA",
-        "AMZN", "META", "GOOGL", "SPY", "QQQ", "GLD", "SLV",
-    ]
+@st.cache_data(ttl=900, show_spinner=False)
+def get_earnings_snapshot(symbol: str) -> dict:
+    try:
+        ticker = yf.Ticker(symbol)
+        cal = getattr(ticker, "calendar", None)
+        if isinstance(cal, pd.DataFrame) and not cal.empty:
+            cal_df = cal.reset_index()
+            return {"calendar": cal_df.to_dict(orient="records")}
+        earnings_dates = ticker.get_earnings_dates(limit=4)
+        if isinstance(earnings_dates, pd.DataFrame) and not earnings_dates.empty:
+            edf = earnings_dates.reset_index()
+            return {"earnings_dates": edf.to_dict(orient="records")}
+    except Exception:
+        pass
+    return {}
 
 
 def is_crypto_symbol(symbol: str) -> bool:
@@ -756,7 +1085,6 @@ def analyze_pullback_setup(
         decision = "AVOID"
 
     confidence = "High" if final_score >= 75 else "Medium" if final_score >= 55 else "Low"
-
     wait_price = preferred_buy if current_price > preferred_buy else current_price
     return {
         "signal": decision,
@@ -866,12 +1194,14 @@ def enrich_results_with_pullback_system(df: pd.DataFrame, period: str, interval:
         row["top_headlines"] = " || ".join(news["top_headlines"])
         row["wait_price"] = pullback["wait_price"]
         row["notes"] = pullback["notes"]
-
-        if "pullback_strength" in row.index:
-            row["pullback_strength"] = pullback["entry_quality"]
-        if "range_position" in row.index:
-            row["range_position"] = pullback["distance_from_buy_pct"]
-
+        row["strength_score"] = round(
+            (safe_float(row["entry_score"], 50) * 0.45)
+            + (safe_float(row["mtf_score"], 50) * 0.30)
+            + ((50 + safe_float(row["news_sentiment_score"], 0) * 60) * 0.10)
+            + (55 if row["decision"] == "BUY" else 40 if row["decision"] == "HOLD / WAIT" else 20) * 0.15,
+            1,
+        )
+        row["signal_badge"] = signal_badge_html(str(row.get("decision", "")), str(row.get("entry_quality", "")))
         enriched_rows.append(row)
 
     return pd.DataFrame(enriched_rows)
@@ -1034,20 +1364,196 @@ def run_backtest(symbol: str, holding_days: int = 10, stop_loss_pct: float = 0.0
     }
 
 
-st.markdown('<div class="main-title">Market Math Analyzer V3 Pro</div>', unsafe_allow_html=True)
+def get_interval_for_chart(period: str) -> str:
+    return {
+        "5d": "15m",
+        "1mo": "1h",
+        "3mo": "1d",
+        "6mo": "1d",
+        "1y": "1d",
+        "2y": "1d",
+        "5y": "1wk",
+    }.get(period, "1d")
+
+
+def build_price_chart(history: pd.DataFrame, symbol: str, overlays: Dict[str, bool], preferred_buy: float, support: float, resistance: float) -> go.Figure:
+    fig = go.Figure()
+    if history.empty:
+        return fig
+
+    use_candles = {"Open", "High", "Low", "Close"}.issubset(history.columns)
+    if use_candles:
+        fig.add_trace(go.Candlestick(
+            x=history.index,
+            open=history["Open"],
+            high=history["High"],
+            low=history["Low"],
+            close=history["Close"],
+            name=symbol,
+        ))
+    else:
+        fig.add_trace(go.Scatter(x=history.index, y=history["Close"], mode="lines", name=symbol))
+
+    for name, enabled in overlays.items():
+        if enabled and name in history.columns:
+            fig.add_trace(go.Scatter(x=history.index, y=history[name], mode="lines", name=name))
+
+    for value, label in [(preferred_buy, "Preferred Buy"), (support, "Support"), (resistance, "Resistance")]:
+        if value > 0:
+            fig.add_hline(y=value, line_dash="dot", annotation_text=label)
+
+    fig.update_layout(
+        title=f"{symbol} technical chart",
+        xaxis_title="Date",
+        yaxis_title="Price",
+        xaxis_rangeslider_visible=False,
+        height=580,
+        margin=dict(l=20, r=20, t=55, b=20),
+    )
+    return fig
+
+
+def build_rsi_chart(history: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    if not history.empty and "RSI14" in history.columns:
+        fig.add_trace(go.Scatter(x=history.index, y=history["RSI14"], mode="lines", name="RSI14"))
+        fig.add_hline(y=70, line_dash="dash")
+        fig.add_hline(y=30, line_dash="dash")
+        fig.update_layout(title="RSI", height=260, margin=dict(l=20, r=20, t=40, b=20))
+    return fig
+
+
+def build_macd_chart(history: pd.DataFrame) -> go.Figure:
+    fig = go.Figure()
+    if not history.empty and "MACD" in history.columns and "MACD_SIGNAL" in history.columns:
+        fig.add_trace(go.Scatter(x=history.index, y=history["MACD"], mode="lines", name="MACD"))
+        fig.add_trace(go.Scatter(x=history.index, y=history["MACD_SIGNAL"], mode="lines", name="Signal"))
+        fig.update_layout(title="MACD", height=260, margin=dict(l=20, r=20, t=40, b=20))
+    return fig
+
+
+def build_comparison_chart(symbol_a: str, symbol_b: str, period: str) -> go.Figure:
+    interval = get_interval_for_chart(period)
+    a = get_symbol_history(symbol_a, period=period, interval=interval)
+    b = get_symbol_history(symbol_b, period=period, interval=interval)
+    fig = go.Figure()
+    if not a.empty and "Close" in a.columns:
+        base = safe_float(a["Close"].iloc[0], 1.0) or 1.0
+        fig.add_trace(go.Scatter(x=a.index, y=(a["Close"] / base) * 100, mode="lines", name=symbol_a))
+    if not b.empty and "Close" in b.columns:
+        base = safe_float(b["Close"].iloc[0], 1.0) or 1.0
+        fig.add_trace(go.Scatter(x=b.index, y=(b["Close"] / base) * 100, mode="lines", name=symbol_b))
+    fig.update_layout(title="Relative performance (start = 100)", height=420, margin=dict(l=20, r=20, t=50, b=20), yaxis_title="Indexed return")
+    return fig
+
+
+def overview_html(symbol: str, selected_row: pd.Series, profile: dict) -> str:
+    price = safe_float(selected_row.get("price"), 0)
+    decision = str(selected_row.get("decision", "-"))
+    entry_score = safe_float(selected_row.get("entry_score"), 0)
+    strength = safe_float(selected_row.get("strength_score"), 0)
+    market_cap = profile.get("market_cap")
+    volume = profile.get("volume")
+    high52 = profile.get("fifty_two_week_high")
+    low52 = profile.get("fifty_two_week_low")
+    return (
+        f'<div class="overview-box"><strong>{profile.get("short_name", symbol)}</strong> ({symbol})<br>'
+        f'<span class="small-note">Price: ${price:,.2f} | Decision: {decision} | Entry score: {entry_score:.1f} | Strength score: {strength:.1f}<br>'
+        f'Market cap: {format_value(market_cap)} | Volume: {format_value(volume)} | 52W High: {format_value(high52)} | 52W Low: {format_value(low52)}</span></div>'
+    )
+
+
+restore_supabase_session()
+
+st.markdown('<div class="main-title">Market Math Analyzer V4 Pro</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="sub-title">Sunset pullback engine with adaptive buy zones, support and resistance, multi-timeframe confirmation, sentiment, portfolio sizing, alerts, and first-pass backtesting.</div>',
+    '<div class="sub-title">Supabase-ready multi-user trading workstation with adaptive buy zones, charting, comparison mode, alerts, preferences, journal, and backtesting.</div>',
     unsafe_allow_html=True,
 )
 
-with st.sidebar:
-    st.header("Controls")
+DEFAULT_PREFS = {
+    "history_period": "1y",
+    "data_interval": "1d",
+    "chart_period": "6mo",
+    "show_sma20": True,
+    "show_sma50": True,
+    "show_ema9": True,
+    "show_ema21": True,
+    "show_ema50": False,
+    "show_rsi": True,
+    "show_macd": True,
+    "include_news": True,
+}
 
-    period = st.selectbox("History period", options=["3mo", "6mo", "1y", "2y"], index=2)
-    interval = st.selectbox("Data interval", options=["1d", "1h"], index=0)
+prefs = load_user_preferences(DEFAULT_PREFS)
+
+with st.sidebar:
+    st.header("Account")
+    if supabase_ready():
+        if get_current_user_id():
+            st.success(f"Signed in as {get_current_user_email() or 'user'}")
+            if st.button("Sign out", width="stretch"):
+                ok, msg = auth_sign_out()
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
+        else:
+            auth_mode = st.radio("Auth mode", ["Login", "Sign up"], horizontal=True)
+            with st.form("auth_form"):
+                auth_email = st.text_input("Email")
+                auth_password = st.text_input("Password", type="password")
+                submitted = st.form_submit_button("Continue", use_container_width=True)
+            if submitted:
+                if auth_mode == "Login":
+                    ok, msg = auth_sign_in(auth_email.strip(), auth_password)
+                else:
+                    ok, msg = auth_sign_up(auth_email.strip(), auth_password)
+                if ok:
+                    st.success(msg)
+                    st.rerun()
+                else:
+                    st.error(msg)
+    else:
+        st.warning("Supabase is not configured yet. The app will still work locally until you add SUPABASE_URL and SUPABASE_ANON_KEY.")
+
+    st.divider()
+    st.header("Controls")
+    period = st.selectbox("History period", options=["3mo", "6mo", "1y", "2y"], index=["3mo", "6mo", "1y", "2y"].index(str(prefs.get("history_period", "1y"))))
+    interval = st.selectbox("Data interval", options=["1d", "1h"], index=["1d", "1h"].index(str(prefs.get("data_interval", "1d"))))
+    chart_period = st.selectbox("Chart timeframe", options=CHART_PERIOD_OPTIONS, index=CHART_PERIOD_OPTIONS.index(str(prefs.get("chart_period", "6mo"))))
     min_entry_score = st.slider("Minimum entry score", min_value=0, max_value=100, value=0, step=5)
     selected_decision = st.selectbox("Decision filter", options=["ALL", "BUY", "HOLD / WAIT", "AVOID"], index=0)
-    include_news = st.toggle("Include Yahoo Finance headlines", value=True)
+    include_news = st.toggle("Include Yahoo Finance headlines", value=bool(prefs.get("include_news", True)))
+
+    st.subheader("Chart overlays")
+    show_sma20 = st.toggle("SMA 20", value=bool(prefs.get("show_sma20", True)))
+    show_sma50 = st.toggle("SMA 50", value=bool(prefs.get("show_sma50", True)))
+    show_ema9 = st.toggle("EMA 9", value=bool(prefs.get("show_ema9", True)))
+    show_ema21 = st.toggle("EMA 21", value=bool(prefs.get("show_ema21", True)))
+    show_ema50 = st.toggle("EMA 50", value=bool(prefs.get("show_ema50", False)))
+    show_rsi = st.toggle("RSI panel", value=bool(prefs.get("show_rsi", True)))
+    show_macd = st.toggle("MACD panel", value=bool(prefs.get("show_macd", True)))
+
+    if st.button("Save display preferences", width="stretch"):
+        ok, msg = save_user_preferences({
+            "history_period": period,
+            "data_interval": interval,
+            "chart_period": chart_period,
+            "show_sma20": show_sma20,
+            "show_sma50": show_sma50,
+            "show_ema9": show_ema9,
+            "show_ema21": show_ema21,
+            "show_ema50": show_ema50,
+            "show_rsi": show_rsi,
+            "show_macd": show_macd,
+            "include_news": include_news,
+        })
+        if ok:
+            st.success(msg)
+        else:
+            st.info(msg)
 
     if st.button("Refresh market data", width="stretch"):
         st.cache_data.clear()
@@ -1059,65 +1565,8 @@ with st.sidebar:
     risk_pct = st.number_input("Risk per trade (%)", min_value=0.25, max_value=10.0, value=1.0, step=0.25)
     max_exposure_pct = st.number_input("Max position exposure (%)", min_value=1.0, max_value=100.0, value=15.0, step=1.0)
 
-    st.divider()
-    st.subheader("Watchlist editor")
-    preset_symbols = [
-        "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD", "DOGE-USD",
-        "HBAR-USD", "ATOM-USD", "BNB-USD", "AVAX-USD", "LINK-USD",
-        "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "GOOGL",
-        "MSTR", "COIN", "SPY", "QQQ", "GLD", "SLV", "IBIT",
-    ]
-    if "watchlist_editor" not in st.session_state:
-        st.session_state.watchlist_editor = "\n".join(current_watchlist())
-
-    chosen_presets = st.multiselect("Add common tickers", options=preset_symbols)
-    st.caption("Search any Yahoo Finance ticker, validate it, then add it to your watchlist.")
-    search_ticker = st.text_input("Ticker search", placeholder="Example: BTC-USD, SOL-USD, AAPL, MSTR, IBIT")
-    col_check, col_add = st.columns(2)
-    with col_check:
-        if st.button("Check ticker", width="stretch"):
-            ticker = search_ticker.strip().upper()
-            if not ticker:
-                st.warning("Enter a ticker first.")
-            elif validate_ticker(ticker):
-                st.success(f"{ticker} is available.")
-            else:
-                st.error(f"{ticker} was not found or has no recent data.")
-    with col_add:
-        if st.button("Add ticker", width="stretch"):
-            ticker = search_ticker.strip().upper()
-            current_lines = [x.strip().upper() for x in st.session_state.watchlist_editor.splitlines() if x.strip()]
-            if not ticker:
-                st.warning("Enter a ticker first.")
-            elif not validate_ticker(ticker):
-                st.error(f"{ticker} is not available from Yahoo Finance.")
-            elif ticker in current_lines:
-                st.info(f"{ticker} is already in the watchlist.")
-            else:
-                current_lines.append(ticker)
-                st.session_state.watchlist_editor = "\n".join(current_lines)
-                st.success(f"Added {ticker} to the watchlist editor.")
-
-    editable_watchlist = st.text_area("Current watchlist", key="watchlist_editor", height=220)
-    if st.button("Save watchlist", width="stretch"):
-        lines = editable_watchlist.splitlines()
-        lines.extend(chosen_presets)
-        save_watchlist(lines)
-        st.cache_data.clear()
-        st.success("Watchlist saved.")
-
-    st.divider()
-    st.subheader("Formulas editor")
-    formulas_text = st.text_area("Custom formulas", value=read_text_file(FORMULAS_FILE), height=180)
-    if st.button("Save formulas", width="stretch"):
-        save_formulas(formulas_text)
-        st.cache_data.clear()
-        st.success("Formulas saved.")
-
-    st.divider()
-    st.caption(f"Project folder: {BASE_DIR}")
-
-st.info("🌅 Scanning pullback setups with structure, timeframes, and headlines...")
+watchlist_symbols = load_user_watchlist()
+formulas_text_default = load_user_formulas()
 
 with st.spinner("Scanning pullback setups with structure, timeframes, and headlines..."):
     result = get_analysis(period=period, interval=interval)
@@ -1129,7 +1578,6 @@ if result.empty:
 
 result = result.copy()
 result["asset_class"] = result["symbol"].apply(lambda s: "Crypto" if is_crypto_symbol(str(s)) else "Stock / ETF")
-
 filtered = result.copy()
 if selected_decision != "ALL" and "decision" in filtered.columns:
     filtered = filtered[filtered["decision"] == selected_decision]
@@ -1152,7 +1600,7 @@ with c2:
 with c3:
     st.metric("Average entry score", round(float(result["entry_score"].mean()), 1))
 with c4:
-    st.metric("Alert-ready", len(alerts_df))
+    st.metric("Average strength score", round(float(result["strength_score"].mean()), 1))
 
 card1, card2 = st.columns(2)
 with card1:
@@ -1160,171 +1608,331 @@ with card1:
 with card2:
     st.markdown(f'<div class="accent-card-soft"><strong>{stock_title}</strong><br><span class="small-note">{stock_detail}</span></div>', unsafe_allow_html=True)
 
-st.subheader("Alert center")
-if alerts_df.empty:
-    st.write("No alert-ready setups right now.")
-else:
-    for _, arow in alerts_df.iterrows():
-        badge = signal_badge_html(str(arow.get("decision", "")), "Strong" if safe_float(arow.get("entry_score"), 0) >= 75 else "Moderate")
-        st.markdown(
-            f'<div class="alert-card">{badge}<br><strong>{arow.get("symbol", "-")}</strong> '
-            f'near trigger zone — price ${safe_float(arow.get("price"), 0):,.2f} | preferred buy ${safe_float(arow.get("preferred_buy_price"), 0):,.2f} '
-            f'| distance {safe_float(arow.get("distance_from_buy_pct"), 0):.2f}% | score {safe_float(arow.get("entry_score"), 0):.1f}<br>'
-            f'<span class="small-note">{arow.get("notes", "")}</span></div>',
-            unsafe_allow_html=True,
-        )
+main_tab, chart_tab, compare_tab, journal_tab, settings_tab = st.tabs([
+    "Dashboard", "Symbol Lab", "Compare", "Journal & Alerts", "Settings"
+])
 
-left, right = st.columns([1.05, 1.25])
-with left:
-    st.subheader("Top setups")
-    if summary_lines:
-        for item in summary_lines:
-            badge = signal_badge_html(item["decision"], item["entry_quality"])
+with main_tab:
+    st.subheader("Alert center")
+    if alerts_df.empty:
+        st.write("No alert-ready setups right now.")
+    else:
+        for _, arow in alerts_df.iterrows():
+            badge = signal_badge_html(str(arow.get("decision", "")), "Strong" if safe_float(arow.get("entry_score"), 0) >= 75 else "Moderate")
             st.markdown(
-                f'<div class="setup-line">{badge}<div class="setup-title">{item["symbol"]} — price {item["price"]} | buy zone {item["preferred"]}</div>'
-                f'<div class="setup-note">Wait price {item["wait_price"]} | Distance {item["distance"]} | Score {item["score"]} | {item["notes"]}</div></div>',
+                f'<div class="alert-card">{badge}<br><strong>{arow.get("symbol", "-")}</strong> '
+                f'near trigger zone — price ${safe_float(arow.get("price"), 0):,.2f} | preferred buy ${safe_float(arow.get("preferred_buy_price"), 0):,.2f} '
+                f'| distance {safe_float(arow.get("distance_from_buy_pct"), 0):.2f}% | score {safe_float(arow.get("entry_score"), 0):.1f}<br>'
+                f'<span class="small-note">{arow.get("notes", "")}</span></div>',
                 unsafe_allow_html=True,
             )
-    else:
-        st.write("No buy-ready pullback setups right now.")
-with right:
-    st.subheader("Share with friends")
-    st.caption("Copy this summary into a text message, Slack, or social post.")
-    st.text_area("Share-ready summary", value=share_text, height=220)
 
-st.subheader("Results")
-preferred_order = [
-    "symbol", "asset_class", "price", "decision", "confidence", "entry_score", "preferred_buy_price", "wait_price",
-    "distance_from_buy_pct", "support", "resistance", "mtf_label", "mtf_score", "news_sentiment_label",
-    "news_sentiment_score", "trend_label", "momentum_label", "entry_quality", "rsi_14", "macd", "macd_signal", "notes",
-]
-existing_cols = [col for col in preferred_order if col in filtered.columns]
-display_df = filtered[existing_cols].copy()
-for col in ["distance_from_buy_pct", "news_sentiment_score"]:
-    if col in display_df.columns:
-        display_df[col] = display_df[col].map(lambda x: f"{float(x):.2f}%" if pd.notna(x) and col == "distance_from_buy_pct" else (f"{float(x):.3f}" if pd.notna(x) else "-"))
-for col in ["entry_score", "mtf_score", "rsi_14"]:
-    if col in display_df.columns:
-        display_df[col] = display_df[col].map(lambda x: f"{float(x):.1f}" if pd.notna(x) else "-")
-for col in ["price", "preferred_buy_price", "wait_price", "support", "resistance"]:
-    if col in display_df.columns:
-        display_df[col] = display_df[col].map(lambda x: f"${float(x):,.2f}" if pd.notna(x) else "-")
-st.dataframe(display_df, width="stretch", hide_index=True)
+    left, right = st.columns([1.05, 1.25])
+    with left:
+        st.subheader("Top setups")
+        if summary_lines:
+            for item in summary_lines:
+                badge = signal_badge_html(item["decision"], item["entry_quality"])
+                st.markdown(
+                    f'<div class="setup-line">{badge}<div class="setup-title">{item["symbol"]} — price {item["price"]} | buy zone {item["preferred"]}</div>'
+                    f'<div class="setup-note">Wait price {item["wait_price"]} | Distance {item["distance"]} | Score {item["score"]} | {item["notes"]}</div></div>',
+                    unsafe_allow_html=True,
+                )
+        else:
+            st.write("No buy-ready pullback setups right now.")
+    with right:
+        st.subheader("Share with friends")
+        st.caption("Copy this summary into a text message, Slack, or social post.")
+        st.text_area("Share-ready summary", value=share_text, height=220)
 
-st.subheader("Single symbol detail")
-symbols = filtered["symbol"].dropna().tolist() if "symbol" in filtered.columns else []
-if symbols:
-    selected_symbol = st.selectbox("Choose a symbol", options=symbols)
-    selected_row = filtered[filtered["symbol"] == selected_symbol].iloc[0]
-    history = get_symbol_history(selected_symbol, period=period, interval=interval)
-    mtf = multi_timeframe_confirmation(selected_symbol)
-    news = get_news_sentiment(selected_symbol) if include_news else {"top_headlines": [], "news_sentiment_label": "Neutral", "news_sentiment_score": 0.0}
-    trade_plan = estimate_trade_plan(
-        current_price=safe_float(selected_row.get("price"), 0.0),
-        preferred_buy=safe_float(selected_row.get("preferred_buy_price"), 0.0),
-        support=safe_float(selected_row.get("support"), 0.0),
-        resistance=safe_float(selected_row.get("resistance"), 0.0),
-        atr_pct=safe_float(history["ATR_PCT"].tail(1).mean(), 0.03) if not history.empty and "ATR_PCT" in history.columns else 0.03,
-        account_size=account_size,
-        risk_pct=risk_pct,
-        max_exposure_pct=max_exposure_pct,
-    )
-    backtest = run_backtest(selected_symbol)
-
-    d1, d2, d3, d4 = st.columns(4)
-    detail_metrics = [
-        ("Price", f"${safe_float(selected_row.get('price')):,.2f}"),
-        ("Decision", selected_row.get("decision", "-")),
-        ("Entry score", f"{safe_float(selected_row.get('entry_score')):.1f}"),
-        ("Confidence", selected_row.get("confidence", "-")),
-        ("Preferred buy", f"${safe_float(selected_row.get('preferred_buy_price')):,.2f}"),
-        ("Support", f"${safe_float(selected_row.get('support')):,.2f}"),
-        ("Resistance", f"${safe_float(selected_row.get('resistance')):,.2f}"),
-        ("Wait price", f"${safe_float(selected_row.get('wait_price')):,.2f}"),
+    st.subheader("Results")
+    preferred_order = [
+        "symbol", "asset_class", "price", "decision", "confidence", "entry_score", "strength_score", "preferred_buy_price", "wait_price",
+        "distance_from_buy_pct", "support", "resistance", "mtf_label", "mtf_score", "news_sentiment_label",
+        "news_sentiment_score", "trend_label", "momentum_label", "entry_quality", "rsi_14", "macd", "macd_signal", "notes",
     ]
-    columns = [d1, d2, d3, d4]
-    for idx, (label, value) in enumerate(detail_metrics):
-        columns[idx % 4].metric(label, value)
+    existing_cols = [col for col in preferred_order if col in filtered.columns]
+    display_df = filtered[existing_cols].copy()
+    for col in ["distance_from_buy_pct", "news_sentiment_score"]:
+        if col in display_df.columns:
+            display_df[col] = display_df[col].map(lambda x: f"{float(x):.2f}%" if pd.notna(x) and col == "distance_from_buy_pct" else (f"{float(x):.3f}" if pd.notna(x) else "-"))
+    for col in ["entry_score", "mtf_score", "rsi_14", "strength_score"]:
+        if col in display_df.columns:
+            display_df[col] = display_df[col].map(lambda x: f"{float(x):.1f}" if pd.notna(x) else "-")
+    for col in ["price", "preferred_buy_price", "wait_price", "support", "resistance"]:
+        if col in display_df.columns:
+            display_df[col] = display_df[col].map(lambda x: f"${float(x):,.2f}" if pd.notna(x) else "-")
+    st.dataframe(display_df, width="stretch", hide_index=True)
 
-    badge = signal_badge_html(str(selected_row.get("decision", "")), str(selected_row.get("entry_quality", "")))
-    st.markdown(
-        f'<div class="accent-card">{badge}<br><span class="{decision_class(str(selected_row.get("decision", "-")))}">{selected_row.get("decision", "-")}</span><br>'
-        f'<span class="small-note">{selected_row.get("notes", "-")}</span></div>',
-        unsafe_allow_html=True,
-    )
+with chart_tab:
+    st.subheader("Single symbol detail")
+    symbols = filtered["symbol"].dropna().tolist() if "symbol" in filtered.columns else []
+    if symbols:
+        selected_symbol = st.selectbox("Choose a symbol", options=symbols)
+        selected_row = filtered[filtered["symbol"] == selected_symbol].iloc[0]
+        history = get_symbol_history(selected_symbol, period=chart_period, interval=get_interval_for_chart(chart_period))
+        mtf = multi_timeframe_confirmation(selected_symbol)
+        news = get_news_sentiment(selected_symbol) if include_news else {"top_headlines": [], "news_sentiment_label": "Neutral", "news_sentiment_score": 0.0}
+        profile = get_symbol_profile(selected_symbol)
+        earnings = get_earnings_snapshot(selected_symbol)
+        trade_plan = estimate_trade_plan(
+            current_price=safe_float(selected_row.get("price"), 0.0),
+            preferred_buy=safe_float(selected_row.get("preferred_buy_price"), 0.0),
+            support=safe_float(selected_row.get("support"), 0.0),
+            resistance=safe_float(selected_row.get("resistance"), 0.0),
+            atr_pct=safe_float(history["ATR_PCT"].tail(1).mean(), 0.03) if not history.empty and "ATR_PCT" in history.columns else 0.03,
+            account_size=account_size,
+            risk_pct=risk_pct,
+            max_exposure_pct=max_exposure_pct,
+        )
+        backtest = run_backtest(selected_symbol)
 
-    lcol, rcol = st.columns(2)
-    with lcol:
+        st.markdown(overview_html(selected_symbol, selected_row, profile), unsafe_allow_html=True)
+        d1, d2, d3, d4 = st.columns(4)
+        detail_metrics = [
+            ("Price", f"${safe_float(selected_row.get('price')):,.2f}"),
+            ("Decision", selected_row.get("decision", "-")),
+            ("Entry score", f"{safe_float(selected_row.get('entry_score')):.1f}"),
+            ("Strength score", f"{safe_float(selected_row.get('strength_score')):.1f}"),
+            ("Preferred buy", f"${safe_float(selected_row.get('preferred_buy_price')):,.2f}"),
+            ("Support", f"${safe_float(selected_row.get('support')):,.2f}"),
+            ("Resistance", f"${safe_float(selected_row.get('resistance')):,.2f}"),
+            ("Wait price", f"${safe_float(selected_row.get('wait_price')):,.2f}"),
+        ]
+        columns = [d1, d2, d3, d4]
+        for idx, (label, value) in enumerate(detail_metrics):
+            columns[idx % 4].metric(label, value)
+
+        badge = signal_badge_html(str(selected_row.get("decision", "")), str(selected_row.get("entry_quality", "")))
         st.markdown(
-            f'<div class="accent-card-soft"><strong>Multi-timeframe confirmation</strong><br>'
-            f'<span class="small-note">1H: {selected_row.get("mtf_hourly", "-")} | 1D: {selected_row.get("mtf_daily", "-")} | 1W: {selected_row.get("mtf_weekly", "-")}<br>'
-            f'Label: {selected_row.get("mtf_label", "-")} | Score: {safe_float(selected_row.get("mtf_score"), 0):.1f}<br>'
-            f'{mtf.get("mtf_reason", "")}</span></div>',
+            f'<div class="accent-card">{badge}<br><span class="{decision_class(str(selected_row.get("decision", "-")))}">{selected_row.get("decision", "-")}</span><br>'
+            f'<span class="small-note">{selected_row.get("notes", "-")}</span></div>',
             unsafe_allow_html=True,
         )
-    with rcol:
-        st.markdown(
-            f'<div class="accent-card-soft"><strong>News sentiment</strong><br>'
-            f'<span class="small-note">Sentiment: {selected_row.get("news_sentiment_label", "Neutral")} | '
-            f'Score: {safe_float(selected_row.get("news_sentiment_score"), 0):.3f} | Headlines: {int(safe_float(selected_row.get("news_headline_count"), 0))}</span></div>',
-            unsafe_allow_html=True,
+
+        lcol, rcol = st.columns(2)
+        with lcol:
+            st.markdown(
+                f'<div class="accent-card-soft"><strong>Multi-timeframe confirmation</strong><br>'
+                f'<span class="small-note">1H: {selected_row.get("mtf_hourly", "-")} | 1D: {selected_row.get("mtf_daily", "-")} | 1W: {selected_row.get("mtf_weekly", "-")}<br>'
+                f'Label: {selected_row.get("mtf_label", "-")} | Score: {safe_float(selected_row.get("mtf_score"), 0):.1f}<br>'
+                f'{mtf.get("mtf_reason", "")}</span></div>',
+                unsafe_allow_html=True,
+            )
+        with rcol:
+            st.markdown(
+                f'<div class="accent-card-soft"><strong>News sentiment</strong><br>'
+                f'<span class="small-note">Sentiment: {selected_row.get("news_sentiment_label", "Neutral")} | '
+                f'Score: {safe_float(selected_row.get("news_sentiment_score"), 0):.3f} | Headlines: {int(safe_float(selected_row.get("news_headline_count"), 0))}</span></div>',
+                unsafe_allow_html=True,
+            )
+            if news.get("top_headlines"):
+                for headline in news["top_headlines"][:3]:
+                    st.write(f"- {headline}")
+
+        if earnings:
+            st.subheader("Events / earnings snapshot")
+            if earnings.get("calendar"):
+                st.dataframe(pd.DataFrame(earnings["calendar"]), width="stretch", hide_index=True)
+            elif earnings.get("earnings_dates"):
+                st.dataframe(pd.DataFrame(earnings["earnings_dates"]), width="stretch", hide_index=True)
+
+        st.subheader("Technical chart")
+        price_fig = build_price_chart(
+            history.tail(220),
+            selected_symbol,
+            overlays={
+                "SMA20": show_sma20,
+                "SMA50": show_sma50,
+                "EMA9": show_ema9,
+                "EMA21": show_ema21,
+                "EMA50": show_ema50,
+            },
+            preferred_buy=safe_float(selected_row.get("preferred_buy_price"), 0.0),
+            support=safe_float(selected_row.get("support"), 0.0),
+            resistance=safe_float(selected_row.get("resistance"), 0.0),
         )
-        if news.get("top_headlines"):
-            for headline in news["top_headlines"][:3]:
-                st.write(f"- {headline}")
+        st.plotly_chart(price_fig, use_container_width=True)
 
-    st.subheader("Trade plan")
-    t1, t2, t3, t4 = st.columns(4)
-    with t1:
-        st.metric("Entry", f"${trade_plan['entry_price']:,.2f}")
-    with t2:
-        st.metric("Stop", f"${trade_plan['stop_price']:,.2f}")
-    with t3:
-        st.metric("Target", f"${trade_plan['target_price']:,.2f}")
-    with t4:
-        st.metric("R:R", f"{trade_plan['rr_ratio']:.2f}")
-    t5, t6, t7 = st.columns(3)
-    with t5:
-        st.metric("Suggested units", f"{trade_plan['units']:,.4f}")
-    with t6:
-        st.metric("Position value", f"${trade_plan['position_value']:,.2f}")
-    with t7:
-        st.metric("Capital at risk", f"${trade_plan['capital_at_risk']:,.2f}")
+        ind1, ind2 = st.columns(2)
+        with ind1:
+            if show_rsi:
+                st.plotly_chart(build_rsi_chart(history.tail(220)), use_container_width=True)
+        with ind2:
+            if show_macd:
+                st.plotly_chart(build_macd_chart(history.tail(220)), use_container_width=True)
 
-    st.subheader("Backtest snapshot")
-    b1, b2, b3, b4 = st.columns(4)
-    with b1:
-        st.metric("Trades", backtest["trades"])
-    with b2:
-        st.metric("Win rate", f"{backtest['win_rate']:.1f}%")
-    with b3:
-        st.metric("Avg return", f"{backtest['avg_return']:.2f}%")
-    with b4:
-        st.metric("Max drawdown", f"{backtest['max_drawdown']:.2f}%")
-    if isinstance(backtest.get("results"), pd.DataFrame) and not backtest["results"].empty:
-        bt_df = backtest["results"].copy()
-        bt_df["entry_date"] = bt_df["entry_date"].astype(str)
-        st.dataframe(bt_df.tail(15), width="stretch", hide_index=True)
+        st.subheader("Trade plan")
+        t1, t2, t3, t4 = st.columns(4)
+        with t1:
+            st.metric("Entry", f"${trade_plan['entry_price']:,.2f}")
+        with t2:
+            st.metric("Stop", f"${trade_plan['stop_price']:,.2f}")
+        with t3:
+            st.metric("Target", f"${trade_plan['target_price']:,.2f}")
+        with t4:
+            st.metric("R:R", f"{trade_plan['rr_ratio']:.2f}")
+        t5, t6, t7 = st.columns(3)
+        with t5:
+            st.metric("Suggested units", f"{trade_plan['units']:,.4f}")
+        with t6:
+            st.metric("Position value", f"${trade_plan['position_value']:,.2f}")
+        with t7:
+            st.metric("Capital at risk", f"${trade_plan['capital_at_risk']:,.2f}")
 
-    if not history.empty and "Close" in history.columns:
-        st.write("**Price chart**")
-        chart_df = history[["Close"]].copy().tail(120)
-        chart_df["Preferred Buy"] = safe_float(selected_row.get("preferred_buy_price"))
-        chart_df["Support"] = safe_float(selected_row.get("support"))
-        chart_df["Resistance"] = safe_float(selected_row.get("resistance"))
-        if "EMA21" in history.columns:
-            chart_df["EMA21"] = history["EMA21"].tail(len(chart_df))
-        st.line_chart(chart_df, height=360)
-else:
-    st.write("No symbols available after filtering.")
+        st.subheader("Backtest snapshot")
+        b1, b2, b3, b4 = st.columns(4)
+        with b1:
+            st.metric("Trades", backtest["trades"])
+        with b2:
+            st.metric("Win rate", f"{backtest['win_rate']:.1f}%")
+        with b3:
+            st.metric("Avg return", f"{backtest['avg_return']:.2f}%")
+        with b4:
+            st.metric("Max drawdown", f"{backtest['max_drawdown']:.2f}%")
+        if isinstance(backtest.get("results"), pd.DataFrame) and not backtest["results"].empty:
+            bt_df = backtest["results"].copy()
+            bt_df["entry_date"] = bt_df["entry_date"].astype(str)
+            st.dataframe(bt_df.tail(15), width="stretch", hide_index=True)
+    else:
+        st.write("No symbols available after filtering.")
+
+with compare_tab:
+    st.subheader("Comparison mode")
+    compare_symbols = result["symbol"].dropna().tolist()
+    if len(compare_symbols) >= 2:
+        cmp1, cmp2, cmp3 = st.columns(3)
+        with cmp1:
+            compare_a = st.selectbox("First symbol", options=compare_symbols, index=0, key="compare_a")
+        with cmp2:
+            compare_b = st.selectbox("Second symbol", options=compare_symbols, index=min(1, len(compare_symbols) - 1), key="compare_b")
+        with cmp3:
+            compare_period = st.selectbox("Comparison timeframe", options=CHART_PERIOD_OPTIONS, index=CHART_PERIOD_OPTIONS.index(chart_period), key="compare_period")
+        st.plotly_chart(build_comparison_chart(compare_a, compare_b, compare_period), use_container_width=True)
+        compare_table = filtered[filtered["symbol"].isin([compare_a, compare_b])][[c for c in ["symbol", "price", "decision", "entry_score", "strength_score", "mtf_score", "news_sentiment_label", "preferred_buy_price"] if c in filtered.columns]].copy()
+        st.dataframe(compare_table, width="stretch", hide_index=True)
+    else:
+        st.write("Need at least two symbols to compare.")
+
+with journal_tab:
+    st.subheader("Saved alerts")
+    alert_cols = st.columns([1.2, 1.2, 1, 1.3])
+    with alert_cols[0]:
+        alert_symbol = st.text_input("Alert symbol", value="BTC-USD")
+    with alert_cols[1]:
+        alert_type = st.selectbox("Alert type", ["price_above", "price_below", "strength_above", "entry_score_above"])
+    with alert_cols[2]:
+        alert_target = st.number_input("Target", value=0.0, step=0.5)
+    with alert_cols[3]:
+        alert_note = st.text_input("Alert note")
+    if st.button("Save alert"):
+        ok, msg = add_alert(alert_symbol, alert_type, alert_target, alert_note)
+        if ok:
+            st.success(msg)
+            st.rerun()
+        else:
+            st.info(msg)
+    saved_alerts = load_alert_rows()
+    if not saved_alerts.empty:
+        st.dataframe(saved_alerts, width="stretch", hide_index=True)
+    else:
+        st.caption("No saved alerts yet.")
+
+    st.subheader("Trade journal")
+    j1, j2, j3 = st.columns(3)
+    with j1:
+        journal_symbol = st.text_input("Journal symbol", value="AAPL")
+        journal_side = st.selectbox("Side", ["Long", "Short"])
+    with j2:
+        journal_entry = st.number_input("Entry price", value=0.0, step=0.5)
+        journal_stop = st.number_input("Stop price", value=0.0, step=0.5)
+    with j3:
+        journal_target = st.number_input("Target price", value=0.0, step=0.5)
+        journal_status = st.selectbox("Status", ["Open", "Closed", "Idea"])
+    journal_thesis = st.text_area("Thesis / notes", height=120)
+    if st.button("Save journal entry"):
+        ok, msg = add_trade_journal_entry(journal_symbol, journal_side, journal_entry, journal_stop, journal_target, journal_thesis, journal_status)
+        if ok:
+            st.success(msg)
+            st.rerun()
+        else:
+            st.info(msg)
+    journal_df = load_trade_journal()
+    if not journal_df.empty:
+        st.dataframe(journal_df, width="stretch", hide_index=True)
+    else:
+        st.caption("No trade journal entries yet.")
+
+with settings_tab:
+    st.subheader("Watchlist editor")
+    preset_symbols = [
+        "BTC-USD", "ETH-USD", "SOL-USD", "XRP-USD", "ADA-USD", "DOGE-USD",
+        "HBAR-USD", "ATOM-USD", "BNB-USD", "AVAX-USD", "LINK-USD",
+        "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "META", "GOOGL",
+        "MSTR", "COIN", "SPY", "QQQ", "GLD", "SLV", "IBIT",
+    ]
+    if "watchlist_editor_v4" not in st.session_state:
+        st.session_state.watchlist_editor_v4 = "\n".join(watchlist_symbols)
+    chosen_presets = st.multiselect("Add common tickers", options=preset_symbols)
+    st.caption("Search any Yahoo Finance ticker, validate it, then add it to your watchlist.")
+    search_ticker = st.text_input("Ticker search", placeholder="Example: BTC-USD, SOL-USD, AAPL, MSTR, IBIT")
+    col_check, col_add = st.columns(2)
+    with col_check:
+        if st.button("Check ticker", width="stretch"):
+            ticker = search_ticker.strip().upper()
+            if not ticker:
+                st.warning("Enter a ticker first.")
+            elif validate_ticker(ticker):
+                st.success(f"{ticker} is available.")
+            else:
+                st.error(f"{ticker} was not found or has no recent data.")
+    with col_add:
+        if st.button("Add ticker", width="stretch"):
+            ticker = search_ticker.strip().upper()
+            current_lines = [x.strip().upper() for x in st.session_state.watchlist_editor_v4.splitlines() if x.strip()]
+            if not ticker:
+                st.warning("Enter a ticker first.")
+            elif not validate_ticker(ticker):
+                st.error(f"{ticker} is not available from Yahoo Finance.")
+            elif ticker in current_lines:
+                st.info(f"{ticker} is already in the watchlist.")
+            else:
+                current_lines.append(ticker)
+                st.session_state.watchlist_editor_v4 = "\n".join(current_lines)
+                st.success(f"Added {ticker} to the watchlist editor.")
+
+    editable_watchlist = st.text_area("Current watchlist", key="watchlist_editor_v4", height=220)
+    if st.button("Save watchlist", width="stretch"):
+        lines = editable_watchlist.splitlines()
+        lines.extend(chosen_presets)
+        ok, msg = save_user_watchlist(lines)
+        st.cache_data.clear()
+        if ok:
+            st.success(msg)
+        else:
+            st.info(msg)
+
+    st.divider()
+    st.subheader("Formulas editor")
+    formulas_text = st.text_area("Custom formulas", value=formulas_text_default, height=180)
+    if st.button("Save formulas", width="stretch"):
+        ok, msg = save_user_formulas(formulas_text)
+        st.cache_data.clear()
+        if ok:
+            st.success(msg)
+        else:
+            st.info(msg)
+
+    st.divider()
+    st.caption(f"Project folder: {BASE_DIR}")
+    st.caption("Supabase tables expected: user_watchlists, user_formulas, user_preferences, user_alerts, trade_journal")
 
 csv_data = filtered.to_csv(index=False).encode("utf-8")
 st.download_button(
     label="Download results as CSV",
     data=csv_data,
-    file_name="market_math_results_v3_pro.csv",
+    file_name="market_math_results_v4_pro.csv",
     mime="text/csv",
     width="stretch",
 )
-
 
