@@ -1326,18 +1326,30 @@ with workstation_tab:
                 st.metric("Max drawdown", f"{safe_float(bt.get('max_drawdown'), 0):.2f}%")
 
 with intelligence_tab:
-    st.markdown('<div class="section-header">Cross-symbol intelligence</div>', unsafe_allow_html=True)
-    intel_df = scan_df[["symbol", "asset_class", "trade_brain_confidence", "decision_bias", "market_state", "sentiment_bias", "liquidity_trap_probability", "why_signal"]].copy()
-    top_intel = intel_df.sort_values(["trade_brain_confidence", "liquidity_trap_probability"], ascending=[False, True]).head(10)
-    for _, row in top_intel.iterrows():
-        box_class = "gold-box" if row["asset_class"] == "Crypto" else "soft-box"
-        st.markdown(
-            f'<div class="{box_class}"><strong>{row["symbol"]}</strong><br>'
-            f'<span class="small-note">Trade Brain {safe_float(row["trade_brain_confidence"]):.1f} | {row["decision_bias"]} | {row["market_state"]}<br>'
-            f'Psychology: {row["sentiment_bias"]} | Liquidity trap {safe_float(row["liquidity_trap_probability"]):.1f}%<br>'
-            f'Why: {row["why_signal"]}</span></div>',
-            unsafe_allow_html=True,
-        )
+    st.markdown('<div class="section-header">Workbench</div>', unsafe_allow_html=True)
+
+    selected_row = None
+    if "selected_symbol" in st.session_state and not scan_df.empty:
+        match_rows = scan_df[scan_df["symbol"] == st.session_state["selected_symbol"]]
+        if not match_rows.empty:
+            selected_row = match_rows.iloc[0]
+    elif not scan_df.empty:
+        selected_row = scan_df.iloc[0]
+
+    if selected_row is not None:
+        current_price = float(selected_row.get("price", 0.0))
+        suggested_buy = float(selected_row.get("preferred_buy", selected_row.get("buy_price", current_price)))
+        asset_name = selected_row.get("symbol", "Selected Asset")
+
+        top_a, top_b = st.columns(2)
+
+        with top_a:
+            st.metric("Current Price", f"${current_price:,.2f}")
+
+        with top_b:
+            st.metric("Suggested Buy Price", f"${suggested_buy:,.2f}", f"{((current_price - suggested_buy) / suggested_buy * 100):+.2f}%" if suggested_buy else None)
+
+    st.divider()
 
 with news_tab:
     st.markdown('<div class="section-header">News / media diagnostics</div>', unsafe_allow_html=True)
