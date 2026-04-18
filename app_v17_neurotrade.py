@@ -1327,7 +1327,117 @@ with workstation_tab:
 
 with intelligence_tab:
     st.markdown('<div class="section-header">Workbench</div>', unsafe_allow_html=True)
+    # --- Workbench top price boxes ---
+    selected_row = None
 
+    if "selected_symbol" in st.session_state and not scan_df.empty:
+        selected_matches = scan_df[scan_df["symbol"] == st.session_state["selected_symbol"]]
+        if not selected_matches.empty:
+            selected_row = selected_matches.iloc[0]
+
+    if selected_row is None and not scan_df.empty:
+        selected_row = scan_df.iloc[0]
+
+    if selected_row is not None:
+        symbol_name = str(selected_row.get("symbol", "Selected Asset"))
+        current_price = float(selected_row.get("price", selected_row.get("current_price", 0.0)))
+        preferred_buy_price = float(
+            selected_row.get("preferred_buy", selected_row.get("suggested_buy", selected_row.get("buy_price", current_price)))
+        )
+
+        price_box_col1, price_box_col2 = st.columns(2)
+
+        with price_box_col1:
+            st.markdown(
+                f"""
+                <div style="
+                    background: rgba(7, 18, 36, 0.92);
+                    border: 1px solid rgba(120, 220, 255, 0.22);
+                    border-radius: 16px;
+                    padding: 14px 16px;
+                    min-height: 92px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.18);
+                ">
+                    <div style="
+                        font-size: 0.78rem;
+                        color: #8fdcff;
+                        font-weight: 700;
+                        letter-spacing: 0.3px;
+                        margin-bottom: 8px;
+                    ">
+                        CURRENT PRICE
+                    </div>
+                    <div style="
+                        font-size: 1.45rem;
+                        font-weight: 800;
+                        color: #f4fbff;
+                        line-height: 1.1;
+                    ">
+                        ${current_price:,.2f}
+                    </div>
+                    <div style="
+                        margin-top: 8px;
+                        font-size: 0.78rem;
+                        color: #94a9bd;
+                    ">
+                        {symbol_name}
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with price_box_col2:
+            distance_pct = 0.0
+            if preferred_buy_price > 0:
+                distance_pct = ((current_price - preferred_buy_price) / preferred_buy_price) * 100
+
+            zone_text = (
+                "Above buy zone" if current_price > preferred_buy_price
+                else "Below buy zone" if current_price < preferred_buy_price
+                else "At buy zone"
+            )
+
+            st.markdown(
+                f"""
+                <div style="
+                    background: rgba(7, 18, 36, 0.92);
+                    border: 1px solid rgba(255, 193, 7, 0.26);
+                    border-radius: 16px;
+                    padding: 14px 16px;
+                    min-height: 92px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.18);
+                ">
+                    <div style="
+                        font-size: 0.78rem;
+                        color: #ffd36a;
+                        font-weight: 700;
+                        letter-spacing: 0.3px;
+                        margin-bottom: 8px;
+                    ">
+                        PREFERRED BUY PRICE
+                    </div>
+                    <div style="
+                        font-size: 1.45rem;
+                        font-weight: 800;
+                        color: #f4fbff;
+                        line-height: 1.1;
+                    ">
+                        ${preferred_buy_price:,.2f}
+                    </div>
+                    <div style="
+                        margin-top: 8px;
+                        font-size: 0.78rem;
+                        color: #94a9bd;
+                    ">
+                        {zone_text} • {distance_pct:+.2f}%
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.markdown("<div style='height: 10px;'></div>", unsafe_allow_html=True)
     selected_row = None
     if "selected_symbol" in st.session_state and not scan_df.empty:
         match_rows = scan_df[scan_df["symbol"] == st.session_state["selected_symbol"]]
