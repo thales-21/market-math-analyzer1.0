@@ -304,14 +304,19 @@ def show_reset_password_page():
         st.error("Supabase is not configured.")
         return
 
-    try:
-        supabase.auth.verify_otp({
-            "token_hash": token_hash,
-            "type": "recovery",
-        })
-    except Exception as e:
-        st.error(f"Reset link verification failed: {e}")
-        return
+    if "recovery_verified" not in st.session_state:
+        st.session_state.recovery_verified = False
+
+    if not st.session_state.recovery_verified:
+        try:
+            supabase.auth.verify_otp({
+                "token_hash": token_hash,
+                "type": "recovery",
+            })
+            st.session_state.recovery_verified = True
+        except Exception as e:
+            st.error(f"Reset link verification failed: {e}")
+            return
 
     new_password = st.text_input("New password", type="password")
     confirm_password = st.text_input("Confirm new password", type="password")
@@ -332,6 +337,7 @@ def show_reset_password_page():
         try:
             supabase.auth.update_user({"password": new_password})
             st.success("Password updated. You can now log in.")
+            st.session_state.recovery_verified = False
         except Exception as e:
             st.error(f"Error: {e}")
 
