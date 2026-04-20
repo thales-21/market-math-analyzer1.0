@@ -64,9 +64,16 @@ TICKER_RATE_OVERRIDES = {
     "IBIT": {"bear": -0.18, "base": 0.28, "bull": 0.58},
 }
 
-# =========================================================
+# ============================================================
 # STYLE
-# =========================================================
+# ============================================================
+
+page = st.query_params.get("page", "home")
+
+if page == "reset":
+    show_reset_password_page()
+    st.stop()
+
 st.markdown(
     """
     <style>
@@ -279,8 +286,50 @@ def send_reset_email(email: str):
     supabase = get_supabase()
     if supabase is None:
         raise RuntimeError("Supabase not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Streamlit secrets.")
-    return supabase.auth.reset_password_for_email(email)
 
+    return supabase.auth.reset_password_for_email(
+        email,
+        {"redirect_to": "https://neurotrader.streamlit.app/?page=reset"}
+    )
+def show_reset_password_page():
+    st.title("Reset Your Password")
+
+    new_password = st.text_input("New password", type="password")
+    confirm_password = st.text_input("Confirm new password", type="password")
+
+    query_params = st.query_params
+
+    if "access_token" not in query_params:
+        st.warning("Invalid or expired reset link.")
+        return
+
+    if st.button("Update Password", use_container_width=True):
+        if not new_password or not confirm_password:
+            st.error("Please fill in both fields.")
+            return
+
+        if new_password != confirm_password:
+            st.error("Passwords do not match.")
+            return
+
+        if len(new_password) < 8:
+            st.error("Password must be at least 8 characters.")
+            return
+
+        supabase = get_supabase()
+        if supabase is None:
+            st.error("Supabase is not configured.")
+            return
+
+        try:
+            supabase.auth.set_session({
+                "access_token": query_params.get("access_token"),
+                "refresh_token": query_params.get("refresh_token"),
+            })
+            supabase.auth.update_user({"password": new_password})
+            st.success("Password updated. You can now log in.")
+        except Exception as e:
+            st.error(f"Error: {e}")
 # =========================================================
 # IO / STATE
 # =========================================================
@@ -974,7 +1023,7 @@ with st.sidebar:
             save_watchlist(st.session_state.watchlist)
             st.success("Watchlist reset")
             st.rerun()
-            
+
 # =========================================================
 # RUN ANALYSIS
 # =========================================================
