@@ -291,14 +291,32 @@ def send_reset_email(email: str):
 def show_reset_password_page():
     st.title("Reset Your Password")
 
-    new_password = st.text_input("New password", type="password")
-    confirm_password = st.text_input("Confirm new password", type="password")
-
     query_params = st.query_params
+    token_hash = query_params.get("token_hash")
+    recovery_type = query_params.get("type")
+    email = query_params.get("email")
 
-    if "access_token" not in query_params:
+    if not token_hash or recovery_type != "recovery" or not email:
         st.warning("Invalid or expired reset link.")
         return
+
+    supabase = get_supabase()
+    if supabase is None:
+        st.error("Supabase is not configured.")
+        return
+
+    try:
+        supabase.auth.verify_otp({
+            "email": email,
+            "token_hash": token_hash,
+            "type": "recovery",
+        })
+    except Exception as e:
+        st.error(f"Reset link verification failed: {e}")
+        return
+
+    new_password = st.text_input("New password", type="password")
+    confirm_password = st.text_input("Confirm new password", type="password")
 
     if st.button("Update Password", use_container_width=True):
         if not new_password or not confirm_password:
@@ -313,16 +331,7 @@ def show_reset_password_page():
             st.error("Password must be at least 8 characters.")
             return
 
-        supabase = get_supabase()
-        if supabase is None:
-            st.error("Supabase is not configured.")
-            return
-
         try:
-            supabase.auth.set_session({
-                "access_token": query_params.get("access_token"),
-                "refresh_token": query_params.get("refresh_token"),
-            })
             supabase.auth.update_user({"password": new_password})
             st.success("Password updated. You can now log in.")
         except Exception as e:
