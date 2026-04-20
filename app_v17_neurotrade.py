@@ -68,11 +68,6 @@ TICKER_RATE_OVERRIDES = {
 # STYLE
 # ============================================================
 
-page = st.query_params.get("page", "home")
-
-if page == "reset":
-    show_reset_password_page()
-    st.stop()
 
 st.markdown(
     """
@@ -291,6 +286,8 @@ def send_reset_email(email: str):
         email,
         {"redirect_to": "https://neurotrader.streamlit.app/?page=reset"}
     )
+
+
 def show_reset_password_page():
     st.title("Reset Your Password")
 
@@ -330,6 +327,13 @@ def show_reset_password_page():
             st.success("Password updated. You can now log in.")
         except Exception as e:
             st.error(f"Error: {e}")
+
+
+page = st.query_params.get("page", "home")
+
+if page == "reset":
+    show_reset_password_page()
+    st.stop()
 # =========================================================
 # IO / STATE
 # =========================================================
