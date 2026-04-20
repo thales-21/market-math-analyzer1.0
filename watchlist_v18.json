@@ -1,0 +1,42 @@
+{
+  "BTC-USD": {
+    "preferred_buy": 95000.0,
+    "notes": "Core crypto",
+    "category": "Crypto"
+  },
+  "SOL-USD": {
+    "preferred_buy": 140.0,
+    "notes": "High-beta crypto",
+    "category": "Crypto"
+  },
+  "XRP-USD": {
+    "preferred_buy": 1.75,
+    "notes": "Payments thesis",
+    "category": "Crypto"
+  },
+  "AAVE-USD": {
+    "preferred_buy": 110.0,
+    "notes": "DeFi",
+    "category": "Crypto"
+  },
+  "LINK-USD": {
+    "preferred_buy": 12.0,
+    "notes": "Oracle network",
+    "category": "Crypto"
+  },
+  "SMR": {
+    "preferred_buy": 28.0,
+    "notes": "Nuclear growth",
+    "category": "Stock"
+  },
+  "XOM": {
+    "preferred_buy": 108.0,
+    "notes": "Energy cash flow",
+    "category": "Stock"
+  },
+  "IBIT": {
+    "preferred_buy": 40.0,
+    "notes": "Spot BTC ETF",
+    "category": "ETF"
+  }
+}

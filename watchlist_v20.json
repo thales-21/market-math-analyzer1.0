@@ -1,0 +1,42 @@
+{
+  "BTC-USD": {
+    "preferred_buy": null,
+    "notes": "Core crypto",
+    "category": "Crypto"
+  },
+  "SOL-USD": {
+    "preferred_buy": null,
+    "notes": "High beta crypto",
+    "category": "Crypto"
+  },
+  "XRP-USD": {
+    "preferred_buy": null,
+    "notes": "Payments thesis",
+    "category": "Crypto"
+  },
+  "AAVE-USD": {
+    "preferred_buy": null,
+    "notes": "DeFi",
+    "category": "Crypto"
+  },
+  "SMR": {
+    "preferred_buy": null,
+    "notes": "Nuclear growth",
+    "category": "Stock"
+  },
+  "XOM": {
+    "preferred_buy": null,
+    "notes": "Energy cash flow",
+    "category": "Stock"
+  },
+  "IBIT": {
+    "preferred_buy": null,
+    "notes": "Spot BTC ETF",
+    "category": "ETF"
+  },
+  "ATOM-USD": {
+    "preferred_buy": null,
+    "notes": "",
+    "category": "Crypto"
+  }
+}

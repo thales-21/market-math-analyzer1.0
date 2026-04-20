@@ -7,7 +7,6 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 import yfinance as yf
-from supabase import create_client, Client
 
 # =========================================================
 # NEUROTRADE V20
@@ -52,16 +51,15 @@ CRYPTO_ALIASES = {
 }
 
 ETF_HINTS = {"IBIT", "FBTC", "ARKB", "BITB", "HODL", "GLD", "SLV", "IAUM", "USO", "UNG", "UCO"}
-INDEX_HINTS = {"SPY", "QQQ", "DIA", "IWM", "VOO", "^GSPC", "^NDX", "^DJI"}
 
 TICKER_RATE_OVERRIDES = {
-    "BTC-USD": {"bear": -0.20, "base": 0.32, "bull": 0.68},
-    "ETH-USD": {"bear": -0.25, "base": 0.30, "bull": 0.72},
-    "SOL-USD": {"bear": -0.32, "base": 0.42, "bull": 0.98},
-    "XRP-USD": {"bear": -0.28, "base": 0.24, "bull": 0.58},
-    "AAVE-USD": {"bear": -0.30, "base": 0.36, "bull": 0.88},
-    "LINK-USD": {"bear": -0.26, "base": 0.28, "bull": 0.62},
-    "IBIT": {"bear": -0.18, "base": 0.28, "bull": 0.58},
+    "BTC-USD": {"bear": -0.20, "base": 0.30, "bull": 0.60},
+    "ETH-USD": {"bear": -0.25, "base": 0.28, "bull": 0.65},
+    "SOL-USD": {"bear": -0.32, "base": 0.40, "bull": 0.90},
+    "XRP-USD": {"bear": -0.28, "base": 0.24, "bull": 0.55},
+    "AAVE-USD": {"bear": -0.30, "base": 0.34, "bull": 0.80},
+    "LINK-USD": {"bear": -0.26, "base": 0.26, "bull": 0.58},
+    "IBIT": {"bear": -0.18, "base": 0.26, "bull": 0.52},
 }
 
 # =========================================================
@@ -71,215 +69,115 @@ st.markdown(
     """
     <style>
     .stApp {
-        background:
-            radial-gradient(circle at 62% 18%, rgba(61,174,255,0.18) 0%, rgba(61,174,255,0.08) 16%, rgba(0,0,0,0) 36%),
-            radial-gradient(circle at 50% 44%, rgba(0,200,255,0.10) 0%, rgba(0,0,0,0) 34%),
-            linear-gradient(180deg, #071019 0%, #081321 100%);
-        color: #eef6ff;
-    }
-    section[data-testid="stSidebar"] {
-        background: linear-gradient(180deg, #08111d 0%, #0a1624 100%);
-        border-right: 1px solid rgba(120, 210, 255, 0.10);
+        background: linear-gradient(180deg, #07101a 0%, #091424 100%);
+        color: #f4f7fb;
     }
     .main-title {
         font-size: 2.0rem;
         font-weight: 800;
-        color: #f3f8ff;
+        color: #eef4ff;
         margin-bottom: 0.1rem;
-        text-shadow: 0 0 16px rgba(86, 203, 255, 0.18);
     }
     .sub-title {
-        color: #b6c9dc;
+        color: #b4c2d6;
         font-size: 0.96rem;
         margin-bottom: 1rem;
     }
     .section-label {
         font-size: 1rem;
         font-weight: 700;
-        color: #eef6ff;
+        color: #eef4ff;
         margin-top: 0.35rem;
         margin-bottom: 0.55rem;
     }
     .top-box {
-        background: linear-gradient(180deg, rgba(7,18,33,0.96), rgba(6,15,28,0.99));
-        border: 1px solid rgba(93, 205, 255, 0.18);
-        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(13,24,42,0.95), rgba(9,18,32,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 16px;
         padding: 12px 14px;
         min-height: 96px;
-        box-shadow:
-            0 0 0 1px rgba(64, 180, 255, 0.06) inset,
-            0 0 18px rgba(58, 177, 255, 0.12),
-            0 10px 28px rgba(0,0,0,0.26);
+        box-shadow: 0 10px 28px rgba(0,0,0,0.22);
     }
     .top-box-label {
-        color: #90c9ea;
+        color: #9eb2cf;
         font-size: 0.8rem;
         margin-bottom: 0.15rem;
     }
     .top-box-value {
-        color: #f6fbff;
+        color: #f9fbff;
         font-size: 1.35rem;
         font-weight: 800;
         line-height: 1.15;
         margin-bottom: 0.15rem;
     }
     .top-box-sub {
-        color: #9ec5df;
+        color: #b7c7dc;
         font-size: 0.82rem;
     }
     .glass-card {
-        background: linear-gradient(180deg, rgba(7,18,33,0.97), rgba(6,15,28,0.995));
-        border: 1px solid rgba(93, 205, 255, 0.16);
-        border-radius: 20px;
+        background: linear-gradient(180deg, rgba(13,24,42,0.96), rgba(9,18,32,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
         padding: 16px;
-        box-shadow:
-            0 0 0 1px rgba(64, 180, 255, 0.05) inset,
-            0 0 22px rgba(58, 177, 255, 0.12),
-            0 12px 30px rgba(0,0,0,0.26);
+        box-shadow: 0 12px 30px rgba(0,0,0,0.25);
     }
     .mini-card {
-        background: linear-gradient(180deg, rgba(8,20,36,0.96), rgba(6,15,28,0.99));
-        border: 1px solid rgba(93, 205, 255, 0.14);
-        border-radius: 16px;
+        background: linear-gradient(180deg, rgba(13,24,42,0.95), rgba(9,18,32,0.98));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px;
         padding: 12px;
         min-height: 88px;
-        box-shadow: 0 0 14px rgba(58, 177, 255, 0.08);
     }
     .mini-card-label {
-        color: #91c9e8;
+        color: #9eb2cf;
         font-size: 0.8rem;
         margin-bottom: 0.2rem;
     }
     .mini-card-value {
-        color: #f8fcff;
+        color: #f9fbff;
         font-size: 1.2rem;
         font-weight: 800;
         line-height: 1.1;
     }
     .mini-card-sub {
-        color: #9fc6de;
+        color: #b7c7dc;
         font-size: 0.82rem;
         margin-top: 0.22rem;
     }
     .good-pill {
         display: inline-block;
-        padding: 0.24rem 0.6rem;
-        background: linear-gradient(180deg, rgba(27,73,54,0.95), rgba(21,55,42,0.98));
-        color: #baf4ce;
-        border: 1px solid rgba(111, 242, 166, 0.22);
-        box-shadow: 0 0 12px rgba(46, 204, 113, 0.10);
+        padding: 0.22rem 0.55rem;
+        background: rgba(34,197,94,0.14);
+        color: #b8f5ce;
         border-radius: 999px;
-        margin-right: 0.38rem;
+        margin-right: 0.35rem;
         font-size: 0.76rem;
         font-weight: 700;
     }
     .warn-pill {
         display: inline-block;
-        padding: 0.24rem 0.6rem;
-        background: linear-gradient(180deg, rgba(64,55,23,0.96), rgba(46,39,17,0.99));
-        color: #f6df8f;
-        border: 1px solid rgba(240, 202, 74, 0.24);
-        box-shadow: 0 0 12px rgba(240, 202, 74, 0.08);
+        padding: 0.22rem 0.55rem;
+        background: rgba(234,179,8,0.14);
+        color: #fde68a;
         border-radius: 999px;
-        margin-right: 0.38rem;
+        margin-right: 0.35rem;
         font-size: 0.76rem;
         font-weight: 700;
     }
     .bad-pill {
         display: inline-block;
-        padding: 0.24rem 0.6rem;
-        background: linear-gradient(180deg, rgba(64,26,31,0.96), rgba(45,18,22,0.99));
-        color: #ffb8c0;
-        border: 1px solid rgba(255, 128, 144, 0.22);
-        box-shadow: 0 0 12px rgba(255, 128, 144, 0.08);
+        padding: 0.22rem 0.55rem;
+        background: rgba(239,68,68,0.14);
+        color: #fecaca;
         border-radius: 999px;
-        margin-right: 0.38rem;
+        margin-right: 0.35rem;
         font-size: 0.76rem;
         font-weight: 700;
-    }
-    div[data-testid="stDataFrame"] {
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 0 18px rgba(58, 177, 255, 0.08);
-    }
-    div[data-testid="stDataFrame"] [data-testid="stTable"] {
-        background: rgba(7,18,33,0.92);
-    }
-    div[data-testid="stSelectbox"] label,
-    div[data-testid="stTextInput"] label,
-    div[data-testid="stNumberInput"] label,
-    div[data-testid="stMultiSelect"] label,
-    div[data-testid="stToggle"] label {
-        color: #c5d6e6;
-    }
-    div[data-testid="stButton"] > button {
-        background: linear-gradient(180deg, rgba(245,248,252,0.96), rgba(223,232,241,0.98));
-        color: #0b1624;
-        border: 1px solid rgba(150, 220, 255, 0.28);
-        border-radius: 12px;
-        font-weight: 700;
-        box-shadow: 0 0 16px rgba(86, 203, 255, 0.10);
-    }
-    div[data-testid="stButton"] > button:hover {
-        border-color: rgba(120, 230, 255, 0.40);
-        box-shadow: 0 0 20px rgba(86, 203, 255, 0.18);
-    }
-    div[data-baseweb="input"] > div,
-    div[data-baseweb="select"] > div {
-        background: rgba(7,18,33,0.92) !important;
-        border: 1px solid rgba(105, 210, 255, 0.16) !important;
-        box-shadow: 0 0 10px rgba(86, 203, 255, 0.06);
-        border-radius: 12px !important;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
-
-# =========================================================
-# AUTH HELPERS
-# =========================================================
-@st.cache_resource
-def get_supabase() -> Client | None:
-    try:
-        url = st.secrets.get("SUPABASE_URL")
-        key = st.secrets.get("SUPABASE_ANON_KEY")
-        if url and key:
-            return create_client(url, key)
-    except Exception:
-        pass
-    return None
-
-
-def sign_in_user(email: str, password: str):
-    supabase = get_supabase()
-    if supabase is None:
-        raise RuntimeError("Supabase not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Streamlit secrets.")
-    return supabase.auth.sign_in_with_password(
-        {
-            "email": email,
-            "password": password,
-        }
-    )
-
-
-def sign_up_user(email: str, password: str):
-    supabase = get_supabase()
-    if supabase is None:
-        raise RuntimeError("Supabase not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Streamlit secrets.")
-    return supabase.auth.sign_up(
-        {
-            "email": email,
-            "password": password,
-        }
-    )
-
-
-def send_reset_email(email: str):
-    supabase = get_supabase()
-    if supabase is None:
-        raise RuntimeError("Supabase not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY to Streamlit secrets.")
-    return supabase.auth.reset_password_for_email(email)
 
 # =========================================================
 # IO / STATE
@@ -307,10 +205,6 @@ def normalize_symbol(raw: str) -> str:
 
 if "watchlist" not in st.session_state:
     st.session_state.watchlist = load_watchlist()
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-if "auth_email" not in st.session_state:
-    st.session_state.auth_email = ""
 
 watchlist = st.session_state.watchlist
 
@@ -367,8 +261,6 @@ def search_candidates(raw_query: str) -> pd.DataFrame:
 
 
 def classify_asset(symbol: str, info: dict) -> str:
-    if symbol in INDEX_HINTS:
-        return "Index"
     if symbol in ETF_HINTS:
         return "ETF"
     if symbol.endswith("-USD"):
@@ -537,85 +429,47 @@ def calculate_suggested_buy(current_price: Optional[float], asset_class: str, rs
     if current_price is None or current_price <= 0:
         return None
 
-    # Suggested buy should be the closer, more actionable pullback.
     if asset_class == "Crypto":
-        pullback = 0.06
+        pullback = 0.12
     elif asset_class == "Stock":
-        pullback = 0.03
+        pullback = 0.05
     elif asset_class == "ETF":
-        pullback = 0.025
+        pullback = 0.04
     else:
-        pullback = 0.03
+        pullback = 0.05
 
     if ret_20d > 0.08:
-        pullback += 0.02
+        pullback += 0.03
     if ret_20d > 0.16:
-        pullback += 0.02
+        pullback += 0.04
     if rsi_now > 65:
-        pullback += 0.02
+        pullback += 0.03
     if rsi_now > 72:
-        pullback += 0.02
+        pullback += 0.04
     if above_sma50 and above_sma200:
         pullback += 0.01
 
     if asset_class == "Crypto" and vol > 0.80:
-        pullback += 0.02
+        pullback += 0.03
     elif asset_class != "Crypto" and vol > 0.45:
-        pullback += 0.01
+        pullback += 0.02
 
     if rsi_now < 38:
-        pullback -= 0.02
+        pullback -= 0.03
     if ret_20d < -0.10:
         pullback -= 0.02
 
     if asset_class == "Crypto":
-        pullback = float(np.clip(pullback, 0.03, 0.16))
+        pullback = float(np.clip(pullback, 0.05, 0.28))
     else:
-        pullback = float(np.clip(pullback, 0.015, 0.10))
+        pullback = float(np.clip(pullback, 0.02, 0.15))
 
     suggested = current_price * (1 - pullback)
     suggested = min(suggested, current_price)
     return max(suggested, 0.0)
 
 
-def calculate_buy_anchor(current_price: Optional[float], suggested_buy: Optional[float], asset_class: str, rsi_now: float, ret_20d: float, vol: float) -> Optional[float]:
-    if current_price is None or current_price <= 0 or suggested_buy is None or suggested_buy <= 0:
-        return None
-
-    # Buy anchor is the deeper accumulation zone below the suggested buy.
-    if asset_class == "Crypto":
-        extra_pullback = 0.06
-    elif asset_class == "Stock":
-        extra_pullback = 0.03
-    elif asset_class == "ETF":
-        extra_pullback = 0.025
-    else:
-        extra_pullback = 0.03
-
-    if ret_20d > 0.10:
-        extra_pullback += 0.02
-    if rsi_now > 70:
-        extra_pullback += 0.02
-    if asset_class == "Crypto" and vol > 0.85:
-        extra_pullback += 0.02
-
-    if rsi_now < 38:
-        extra_pullback -= 0.015
-    if ret_20d < -0.10:
-        extra_pullback -= 0.015
-
-    if asset_class == "Crypto":
-        extra_pullback = float(np.clip(extra_pullback, 0.03, 0.12))
-    else:
-        extra_pullback = float(np.clip(extra_pullback, 0.015, 0.07))
-
-    anchor = suggested_buy * (1 - extra_pullback)
-    anchor = min(anchor, suggested_buy)
-    anchor = min(anchor, current_price)
-    return max(anchor, 0.0)
-
-
-def conviction_score(asset_class: str, rsi_now: float, trend_ok: bool, macd_ok: bool, gap_to_anchor: Optional[float], vol: float) -> int:
+def conviction_score(asset_class: str, rsi_now: float, trend_ok: bool, macd_ok: bool, gap_to_buy: Optional[float], vol: float) -> int:
     score = 50
     if trend_ok:
         score += 10
@@ -629,10 +483,10 @@ def conviction_score(asset_class: str, rsi_now: float, trend_ok: bool, macd_ok: 
     elif rsi_now > 75:
         score -= 8
 
-    if gap_to_anchor is not None:
-        if gap_to_anchor <= 0:
+    if gap_to_buy is not None:
+        if gap_to_buy <= 0:
             score += 10
-        elif gap_to_anchor <= 0.08:
+        elif gap_to_buy <= 0.06:
             score += 4
         else:
             score -= 6
@@ -670,32 +524,6 @@ def fmt_pct(x) -> str:
     if x is None or pd.isna(x):
         return "—"
     return f"{float(x) * 100:,.1f}%"
-
-
-def category_style(asset_class: str) -> str:
-    asset_class = str(asset_class)
-    if asset_class == "Crypto":
-        return "background-color: rgba(245, 196, 69, 0.12); color: #f4c54f; font-weight: 700;"
-    if asset_class in {"Stock", "ETF"}:
-        return "background-color: rgba(91, 205, 255, 0.12); color: #69d6ff; font-weight: 700;"
-    if asset_class == "Index":
-        return "background-color: rgba(180, 118, 255, 0.12); color: #c99bff; font-weight: 700;"
-    return "background-color: rgba(180, 180, 180, 0.10); color: #d7e0ea; font-weight: 700;"
-
-
-def category_row_style(row):
-    cls = str(row.get("Class", ""))
-    styles = [""] * len(row)
-    if "Class" in row.index:
-        styles[list(row.index).index("Class")] = category_style(cls)
-    if "Symbol" in row.index:
-        if cls == "Crypto":
-            styles[list(row.index).index("Symbol")] = "color: #f4c54f; font-weight: 700;"
-        elif cls in {"Stock", "ETF"}:
-            styles[list(row.index).index("Symbol")] = "color: #69d6ff; font-weight: 700;"
-        elif cls == "Index":
-            styles[list(row.index).index("Symbol")] = "color: #c99bff; font-weight: 700;"
-    return styles
 
 
 def top_box(label: str, value: str, sub: str) -> str:
@@ -763,20 +591,18 @@ def analyze_symbol(symbol: str, preferred_buy_manual, notes: str, manual_categor
     bull_1y = project_price(current, scenario_rates["bull"], 1)
 
     suggested_buy = calculate_suggested_buy(current, asset_class, rsi_now, ret_20d, vol, above_sma50, above_sma200)
-    buy_anchor = calculate_buy_anchor(current, suggested_buy, asset_class, rsi_now, ret_20d, vol)
 
-    # Manual preferred buy stays manual, but if it is above market it is invalid for display emphasis and scoring.
-    preferred_buy_valid = None
-    preferred_buy_invalid = False
-    if preferred_buy_manual not in (None, 0) and current not in (None, 0):
-        if preferred_buy_manual <= current:
-            preferred_buy_valid = preferred_buy_manual
-        else:
-            preferred_buy_invalid = True
+    # User asked that buy prices never sit above market in the app.
+    effective_preferred_buy = preferred_buy_manual
+    if current is not None and effective_preferred_buy not in (None, 0):
+        if effective_preferred_buy > current:
+            effective_preferred_buy = suggested_buy
+
+    buy_anchor = effective_preferred_buy if effective_preferred_buy not in (None, 0) else suggested_buy
 
     gap_to_preferred = None
-    if preferred_buy_valid not in (None, 0) and current not in (None, 0):
-        gap_to_preferred = current / preferred_buy_valid - 1
+    if effective_preferred_buy not in (None, 0) and current not in (None, 0):
+        gap_to_preferred = current / effective_preferred_buy - 1
 
     gap_to_suggested = None
     if suggested_buy not in (None, 0) and current not in (None, 0):
@@ -794,8 +620,7 @@ def analyze_symbol(symbol: str, preferred_buy_manual, notes: str, manual_categor
         "asset_class": asset_class,
         "current": current,
         "preferred_buy_manual": preferred_buy_manual,
-        "preferred_buy": preferred_buy_valid,
-        "preferred_buy_invalid": preferred_buy_invalid,
+        "preferred_buy": effective_preferred_buy,
         "suggested_buy": suggested_buy,
         "buy_anchor": buy_anchor,
         "gap_to_preferred": gap_to_preferred,
@@ -862,66 +687,6 @@ st.markdown(
 # SIDEBAR
 # =========================================================
 with st.sidebar:
-    st.markdown("### Account")
-
-    supabase_ready = get_supabase() is not None
-    if not supabase_ready:
-        st.warning("Supabase secrets are missing.")
-
-    if not st.session_state.authenticated:
-        auth_mode = st.radio(
-            "Auth",
-            ["Login", "Sign up", "Reset password"],
-            horizontal=True,
-            label_visibility="collapsed",
-        )
-
-        if auth_mode == "Login":
-            email = st.text_input("Email", key="login_email_input")
-            password = st.text_input("Password", type="password", key="login_password_input")
-
-            if st.button("Continue", use_container_width=True, key="login_continue_btn"):
-                try:
-                    res = sign_in_user(email.strip(), password)
-                    if getattr(res, "user", None):
-                        st.session_state.authenticated = True
-                        st.session_state.auth_email = res.user.email
-                        st.success("Logged in")
-                        st.rerun()
-                    else:
-                        st.error("Login failed.")
-                except Exception as e:
-                    st.error(f"Login failed: {e}")
-
-        elif auth_mode == "Sign up":
-            email = st.text_input("Email", key="signup_email_input")
-            password = st.text_input("Password", type="password", key="signup_password_input")
-
-            if st.button("Create account", use_container_width=True, key="signup_continue_btn"):
-                try:
-                    sign_up_user(email.strip(), password)
-                    st.success("Account created. Check your email.")
-                except Exception as e:
-                    st.error(f"Signup failed: {e}")
-
-        elif auth_mode == "Reset password":
-            email = st.text_input("Email", key="reset_email_input")
-
-            if st.button("Send reset email", use_container_width=True, key="reset_continue_btn"):
-                try:
-                    send_reset_email(email.strip())
-                    st.success("Reset email sent")
-                except Exception as e:
-                    st.error(f"Reset failed: {e}")
-
-    else:
-        st.success(f"Logged in as {st.session_state.auth_email}")
-        if st.button("Log out", use_container_width=True, key="logout_btn"):
-            st.session_state.authenticated = False
-            st.session_state.auth_email = ""
-            st.rerun()
-
-    st.markdown("---")
     st.markdown("### Controls")
     chart_period = st.selectbox("Chart period", ["6mo", "1y", "2y", "5y"], index=1)
     sort_by = st.selectbox(
@@ -951,9 +716,7 @@ with st.sidebar:
     notes_input = st.text_input("Notes", placeholder="Why it is on the list")
 
     if st.button("Add ticker", use_container_width=True):
-        if not st.session_state.authenticated:
-            st.warning("Log in to add tickers.")
-        elif chosen_symbol:
+        if chosen_symbol:
             info = get_info(chosen_symbol)
             inferred = classify_asset(chosen_symbol, info)
             watchlist[chosen_symbol] = {
@@ -967,14 +730,11 @@ with st.sidebar:
 
     st.markdown("---")
     if st.button("Reset watchlist to defaults", use_container_width=True):
-        if not st.session_state.authenticated:
-            st.warning("Log in to reset the watchlist.")
-        else:
-            st.session_state.watchlist = DEFAULT_WATCHLIST.copy()
-            save_watchlist(st.session_state.watchlist)
-            st.success("Watchlist reset")
-            st.rerun()
-            
+        st.session_state.watchlist = DEFAULT_WATCHLIST.copy()
+        save_watchlist(st.session_state.watchlist)
+        st.success("Watchlist reset")
+        st.rerun()
+
 # =========================================================
 # RUN ANALYSIS
 # =========================================================
@@ -1044,7 +804,7 @@ workbench = workbench.sort_values(by=sort_map[sort_by], ascending=ascending, na_
 cols = st.columns(4)
 for i, sym in enumerate(workbench.head(4)["Symbol"].tolist()):
     a = next(x for x in analyses if x["symbol"] == sym)
-    sub = f"Suggested {fmt_currency(a['suggested_buy'])} · Anchor {fmt_currency(a['buy_anchor'])}"
+    sub = f"Buy anchor {fmt_currency(a['buy_anchor'])}"
     with cols[i]:
         st.markdown(top_box(f"{sym} current", fmt_currency(a["current"]), sub), unsafe_allow_html=True)
 
@@ -1055,8 +815,7 @@ for col in ["Gap vs Suggested", "Gap vs Preferred", "1D"]:
     show_df[col] = show_df[col].map(fmt_pct)
 show_df["RSI"] = show_df["RSI"].map(lambda x: f"{x:,.1f}")
 
-styled_workbench = show_df.style.apply(category_row_style, axis=1)
-st.dataframe(styled_workbench, use_container_width=True, hide_index=True)
+st.dataframe(show_df, use_container_width=True, hide_index=True)
 
 # =========================================================
 # DETAIL VIEW
@@ -1089,16 +848,13 @@ with right:
     with c1:
         st.markdown(mini_card("Current", fmt_currency(selected["current"]), f"1D {fmt_pct(selected['day_change'])}"), unsafe_allow_html=True)
     with c2:
-        st.markdown(mini_card("Buy anchor", fmt_currency(selected["buy_anchor"]), "Deeper accumulation zone below suggested"), unsafe_allow_html=True)
+        st.markdown(mini_card("Buy anchor", fmt_currency(selected["buy_anchor"]), "System uses preferred if valid, otherwise suggested"), unsafe_allow_html=True)
 
     c3, c4 = st.columns(2)
     with c3:
-        st.markdown(mini_card("Suggested buy", fmt_currency(selected["suggested_buy"]), f"Closer pullback · Gap {fmt_pct(selected['gap_to_suggested'])}"), unsafe_allow_html=True)
+        st.markdown(mini_card("Suggested buy", fmt_currency(selected["suggested_buy"]), f"Gap {fmt_pct(selected['gap_to_suggested'])}"), unsafe_allow_html=True)
     with c4:
-        pref_sub = f"Manual raw {fmt_currency(selected['preferred_buy_manual'])}"
-        if selected["preferred_buy_invalid"]:
-            pref_sub = f"Manual raw {fmt_currency(selected['preferred_buy_manual'])} · above market"
-        st.markdown(mini_card("Preferred buy", fmt_currency(selected["preferred_buy"]), pref_sub), unsafe_allow_html=True)
+        st.markdown(mini_card("Preferred buy", fmt_currency(selected["preferred_buy"]), f"Manual raw {fmt_currency(selected['preferred_buy_manual'])}"), unsafe_allow_html=True)
 
     c5, c6 = st.columns(2)
     with c5:
@@ -1122,7 +878,7 @@ with p2:
 with p3:
     st.markdown(mini_card("Bull 1Y", fmt_currency(selected["bull_1y"]), f"Annual return {fmt_pct(selected['bull_rate'])}"), unsafe_allow_html=True)
 
-st.caption("Bull/base/bear now use stronger crypto-specific overrides and trend calibration. Suggested buy is the closer pullback level. Buy anchor is the deeper ideal accumulation level below suggested buy. Manual preferred buys above market are flagged as invalid and excluded from emphasis/scoring rather than being treated as real active buys.")
+st.caption("Bull/base/bear now use stronger crypto-specific overrides and trend calibration. Manual preferred buys above market are automatically corrected down to the suggested buy before being used in the app display and scoring.")
 
 # =========================================================
 # EDIT WATCHLIST
@@ -1158,22 +914,19 @@ edited = st.data_editor(
 save_col, reload_col = st.columns(2)
 with save_col:
     if st.button("Save watchlist", use_container_width=True):
-        if not st.session_state.authenticated:
-            st.warning("Log in to save watchlist changes.")
-        else:
-            new_watchlist = {}
-            for _, row in edited.iterrows():
-                if bool(row["remove"]):
-                    continue
-                new_watchlist[str(row["symbol"])] = {
-                    "preferred_buy": None if float(row["preferred_buy"]) <= 0 else float(row["preferred_buy"]),
-                    "notes": str(row["notes"]),
-                    "category": str(row["category"]),
-                }
-            st.session_state.watchlist = new_watchlist
-            save_watchlist(new_watchlist)
-            st.success("Watchlist saved")
-            st.rerun()
+        new_watchlist = {}
+        for _, row in edited.iterrows():
+            if bool(row["remove"]):
+                continue
+            new_watchlist[str(row["symbol"])] = {
+                "preferred_buy": None if float(row["preferred_buy"]) <= 0 else float(row["preferred_buy"]),
+                "notes": str(row["notes"]),
+                "category": str(row["category"]),
+            }
+        st.session_state.watchlist = new_watchlist
+        save_watchlist(new_watchlist)
+        st.success("Watchlist saved")
+        st.rerun()
 
 with reload_col:
     if st.button("Reload saved file", use_container_width=True):
