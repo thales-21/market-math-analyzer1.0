@@ -294,9 +294,8 @@ def show_reset_password_page():
     query_params = st.query_params
     token_hash = query_params.get("token_hash")
     recovery_type = query_params.get("type")
-    email = query_params.get("email")
 
-    if not token_hash or recovery_type != "recovery" or not email:
+    if not token_hash or recovery_type != "recovery":
         st.warning("Invalid or expired reset link.")
         return
 
@@ -307,7 +306,6 @@ def show_reset_password_page():
 
     try:
         supabase.auth.verify_otp({
-            "email": email,
             "token_hash": token_hash,
             "type": "recovery",
         })
