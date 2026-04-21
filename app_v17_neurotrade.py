@@ -852,8 +852,12 @@ def analyze_symbol(symbol: str, preferred_buy_manual, notes: str, manual_categor
     if buy_anchor not in (None, 0) and current not in (None, 0):
         gap_to_buy_anchor = current / buy_anchor - 1
 
-    score = conviction_score(asset_class, rsi_now, trend_ok, macd_ok, gap_to_buy_anchor, vol)
+        score = conviction_score(asset_class, rsi_now, trend_ok, macd_ok, gap_to_buy_anchor, vol)
 
+    trend_bonus = 5 if above_sma50 else -5
+    macro_penalty = 8 if not above_sma200 else 0
+    score = score + trend_bonus - macro_penalty
+    score = max(0, min(100, score))
     return {
         "symbol": symbol,
         "name": name,
