@@ -1,0 +1,490 @@
+prospect_id,date,activity_type,summary,rep
+1,2025-11-08,Site Review,Followed up on estimated savings.,Unassigned
+1,2025-10-29,Proposal,Followed up on estimated savings.,Unassigned
+1,2025-12-05,Proposal,Followed up on estimated savings.,Unassigned
+2,2026-01-21,Call,Followed up on estimated savings.,Atlas Admin
+2,2026-02-18,Site Review,Followed up on estimated savings.,Atlas Admin
+2,2026-01-24,Call,Shared proposal and financing overview.,Atlas Admin
+2,2026-02-17,Call,Shared proposal and financing overview.,Atlas Admin
+2,2026-01-09,Email,Shared proposal and financing overview.,Atlas Admin
+3,2026-01-13,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+4,2026-03-26,Call,Shared proposal and financing overview.,Unassigned
+5,2025-11-07,Site Review,Left voicemail and sent SMS.,Unassigned
+5,2025-12-09,Call,Shared proposal and financing overview.,Unassigned
+6,2026-02-23,Email,Followed up on estimated savings.,Atlas Sales
+6,2026-02-26,Proposal,Left voicemail and sent SMS.,Atlas Sales
+6,2026-01-30,Call,Shared proposal and financing overview.,Atlas Sales
+7,2026-06-18,Call,Shared proposal and financing overview.,Unassigned
+8,2026-02-28,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+8,2026-02-05,Site Review,Shared proposal and financing overview.,Unassigned
+9,2026-05-04,Text,Left voicemail and sent SMS.,Atlas Sales
+9,2026-04-11,Email,Followed up on estimated savings.,Atlas Sales
+9,2026-05-31,Text,Shared proposal and financing overview.,Atlas Sales
+9,2026-05-21,Text,Reviewed roof suitability and project timeline.,Atlas Sales
+10,2026-02-20,Call,Followed up on estimated savings.,Atlas Sales
+10,2026-02-08,Site Review,Left voicemail and sent SMS.,Atlas Sales
+10,2026-01-17,Email,Reviewed roof suitability and project timeline.,Atlas Sales
+11,2026-01-19,Call,Shared proposal and financing overview.,Atlas Admin
+11,2026-03-28,Text,Discussed system sizing and utility territory.,Atlas Admin
+11,2026-04-12,Text,Shared proposal and financing overview.,Atlas Admin
+11,2026-03-18,Proposal,Reviewed roof suitability and project timeline.,Atlas Admin
+12,2026-03-23,Text,Reviewed roof suitability and project timeline.,Unassigned
+13,2026-02-07,Text,Shared proposal and financing overview.,Unassigned
+14,2026-03-16,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+14,2026-02-10,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+14,2026-03-01,Proposal,Followed up on estimated savings.,Atlas Sales
+14,2026-04-12,Call,Left voicemail and sent SMS.,Atlas Sales
+15,2026-03-01,Email,Reviewed roof suitability and project timeline.,Unassigned
+15,2026-04-04,Site Review,Followed up on estimated savings.,Unassigned
+15,2026-03-06,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+16,2026-02-21,Email,Reviewed roof suitability and project timeline.,Atlas Admin
+16,2026-03-28,Text,Reviewed roof suitability and project timeline.,Atlas Admin
+16,2026-03-03,Site Review,Left voicemail and sent SMS.,Atlas Admin
+16,2026-02-05,Call,Left voicemail and sent SMS.,Atlas Admin
+16,2026-02-05,Email,Left voicemail and sent SMS.,Atlas Admin
+17,2025-11-30,Proposal,Left voicemail and sent SMS.,Atlas Sales
+18,2026-03-30,Call,Left voicemail and sent SMS.,Unassigned
+18,2026-04-16,Proposal,Discussed system sizing and utility territory.,Unassigned
+18,2026-05-11,Proposal,Discussed system sizing and utility territory.,Unassigned
+19,2026-03-10,Proposal,Shared proposal and financing overview.,Unassigned
+19,2026-03-05,Call,Reviewed roof suitability and project timeline.,Unassigned
+20,2026-03-27,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+20,2026-03-27,Call,Reviewed roof suitability and project timeline.,Unassigned
+20,2026-04-27,Site Review,Followed up on estimated savings.,Unassigned
+20,2026-03-01,Call,Left voicemail and sent SMS.,Unassigned
+20,2026-04-02,Email,Followed up on estimated savings.,Unassigned
+21,2026-02-26,Call,Followed up on estimated savings.,Unassigned
+21,2025-12-12,Proposal,Left voicemail and sent SMS.,Unassigned
+21,2026-02-18,Call,Discussed system sizing and utility territory.,Unassigned
+22,2025-11-28,Call,Left voicemail and sent SMS.,Unassigned
+22,2026-02-11,Site Review,Left voicemail and sent SMS.,Unassigned
+22,2026-02-14,Text,Discussed system sizing and utility territory.,Unassigned
+22,2026-02-10,Text,Reviewed roof suitability and project timeline.,Unassigned
+22,2025-12-10,Call,Reviewed roof suitability and project timeline.,Unassigned
+23,2026-01-29,Site Review,Discussed system sizing and utility territory.,Unassigned
+23,2025-12-09,Email,Followed up on estimated savings.,Unassigned
+23,2026-01-11,Text,Reviewed roof suitability and project timeline.,Unassigned
+23,2026-02-25,Email,Shared proposal and financing overview.,Unassigned
+24,2026-02-25,Proposal,Discussed system sizing and utility territory.,Atlas Sales
+25,2025-12-05,Proposal,Followed up on estimated savings.,Atlas Admin
+25,2025-11-14,Text,Followed up on estimated savings.,Atlas Admin
+26,2025-12-23,Text,Left voicemail and sent SMS.,Unassigned
+26,2025-12-02,Email,Shared proposal and financing overview.,Unassigned
+26,2025-12-26,Proposal,Discussed system sizing and utility territory.,Unassigned
+27,2025-12-28,Email,Left voicemail and sent SMS.,Unassigned
+27,2025-12-01,Email,Left voicemail and sent SMS.,Unassigned
+28,2026-04-19,Text,Followed up on estimated savings.,Unassigned
+28,2026-02-18,Text,Reviewed roof suitability and project timeline.,Unassigned
+28,2026-03-20,Email,Shared proposal and financing overview.,Unassigned
+28,2026-03-31,Site Review,Discussed system sizing and utility territory.,Unassigned
+28,2026-04-02,Call,Left voicemail and sent SMS.,Unassigned
+29,2025-12-27,Site Review,Left voicemail and sent SMS.,Atlas Admin
+30,2025-12-31,Site Review,Shared proposal and financing overview.,Unassigned
+30,2026-02-21,Call,Reviewed roof suitability and project timeline.,Unassigned
+30,2026-02-26,Text,Followed up on estimated savings.,Unassigned
+31,2026-04-04,Email,Reviewed roof suitability and project timeline.,Unassigned
+32,2025-12-28,Text,Followed up on estimated savings.,Atlas Sales
+32,2025-12-23,Site Review,Reviewed roof suitability and project timeline.,Atlas Sales
+33,2026-01-08,Email,Left voicemail and sent SMS.,Atlas Sales
+34,2026-01-08,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+35,2026-01-31,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+35,2026-02-06,Text,Left voicemail and sent SMS.,Unassigned
+36,2026-05-21,Email,Followed up on estimated savings.,Unassigned
+36,2026-03-13,Call,Shared proposal and financing overview.,Unassigned
+36,2026-03-29,Site Review,Left voicemail and sent SMS.,Unassigned
+36,2026-04-08,Call,Discussed system sizing and utility territory.,Unassigned
+36,2026-04-08,Text,Shared proposal and financing overview.,Unassigned
+37,2026-06-17,Text,Discussed system sizing and utility territory.,Unassigned
+37,2026-06-11,Site Review,Left voicemail and sent SMS.,Unassigned
+38,2026-04-08,Site Review,Shared proposal and financing overview.,Atlas Admin
+39,2026-02-28,Proposal,Left voicemail and sent SMS.,Atlas Sales
+39,2026-03-15,Email,Shared proposal and financing overview.,Atlas Sales
+39,2026-03-12,Call,Reviewed roof suitability and project timeline.,Atlas Sales
+39,2026-01-29,Proposal,Followed up on estimated savings.,Atlas Sales
+39,2026-01-25,Email,Left voicemail and sent SMS.,Atlas Sales
+40,2026-05-18,Call,Shared proposal and financing overview.,Unassigned
+40,2026-03-07,Text,Shared proposal and financing overview.,Unassigned
+40,2026-05-06,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+40,2026-03-13,Proposal,Followed up on estimated savings.,Unassigned
+41,2026-01-08,Text,Followed up on estimated savings.,Unassigned
+41,2025-12-27,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+42,2025-09-26,Call,Reviewed roof suitability and project timeline.,Unassigned
+42,2025-11-03,Proposal,Shared proposal and financing overview.,Unassigned
+42,2025-12-09,Proposal,Left voicemail and sent SMS.,Unassigned
+42,2025-12-20,Text,Reviewed roof suitability and project timeline.,Unassigned
+42,2025-11-27,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+43,2026-02-06,Proposal,Discussed system sizing and utility territory.,Unassigned
+43,2026-03-18,Email,Reviewed roof suitability and project timeline.,Unassigned
+43,2026-01-23,Site Review,Followed up on estimated savings.,Unassigned
+43,2026-02-25,Site Review,Discussed system sizing and utility territory.,Unassigned
+43,2026-01-15,Email,Reviewed roof suitability and project timeline.,Unassigned
+44,2025-11-15,Text,Followed up on estimated savings.,Unassigned
+45,2026-06-19,Text,Left voicemail and sent SMS.,Atlas Sales
+45,2026-04-30,Email,Reviewed roof suitability and project timeline.,Atlas Sales
+46,2025-11-26,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+46,2025-12-04,Email,Left voicemail and sent SMS.,Unassigned
+47,2026-03-19,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+47,2026-03-07,Email,Discussed system sizing and utility territory.,Atlas Sales
+47,2026-02-22,Call,Discussed system sizing and utility territory.,Atlas Sales
+47,2026-01-15,Text,Shared proposal and financing overview.,Atlas Sales
+48,2026-04-13,Call,Reviewed roof suitability and project timeline.,Atlas Sales
+48,2026-03-30,Proposal,Shared proposal and financing overview.,Atlas Sales
+48,2026-03-25,Proposal,Followed up on estimated savings.,Atlas Sales
+48,2026-03-02,Email,Followed up on estimated savings.,Atlas Sales
+49,2026-01-21,Text,Followed up on estimated savings.,Unassigned
+50,2026-02-17,Email,Reviewed roof suitability and project timeline.,Atlas Sales
+50,2026-04-10,Text,Reviewed roof suitability and project timeline.,Atlas Sales
+51,2025-11-13,Proposal,Shared proposal and financing overview.,Atlas Admin
+51,2025-11-08,Text,Followed up on estimated savings.,Atlas Admin
+52,2025-11-04,Email,Reviewed roof suitability and project timeline.,Unassigned
+52,2025-11-06,Text,Followed up on estimated savings.,Unassigned
+52,2026-01-17,Call,Discussed system sizing and utility territory.,Unassigned
+53,2025-12-07,Email,Followed up on estimated savings.,Atlas Sales
+54,2026-02-28,Site Review,Followed up on estimated savings.,Atlas Admin
+54,2026-03-28,Proposal,Reviewed roof suitability and project timeline.,Atlas Admin
+54,2026-03-19,Proposal,Left voicemail and sent SMS.,Atlas Admin
+55,2026-01-03,Email,Followed up on estimated savings.,Unassigned
+56,2025-11-26,Call,Left voicemail and sent SMS.,Atlas Admin
+56,2025-11-18,Text,Discussed system sizing and utility territory.,Atlas Admin
+57,2026-04-24,Text,Reviewed roof suitability and project timeline.,Unassigned
+57,2026-06-01,Email,Discussed system sizing and utility territory.,Unassigned
+57,2026-05-12,Call,Discussed system sizing and utility territory.,Unassigned
+57,2026-04-02,Call,Followed up on estimated savings.,Unassigned
+57,2026-06-01,Proposal,Left voicemail and sent SMS.,Unassigned
+58,2026-04-24,Email,Reviewed roof suitability and project timeline.,Unassigned
+58,2026-03-08,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+58,2026-05-03,Site Review,Shared proposal and financing overview.,Unassigned
+58,2026-04-03,Email,Left voicemail and sent SMS.,Unassigned
+58,2026-04-07,Email,Left voicemail and sent SMS.,Unassigned
+59,2026-01-11,Call,Left voicemail and sent SMS.,Unassigned
+59,2025-11-29,Call,Discussed system sizing and utility territory.,Unassigned
+59,2026-01-22,Email,Followed up on estimated savings.,Unassigned
+59,2025-12-08,Site Review,Shared proposal and financing overview.,Unassigned
+60,2026-03-15,Email,Discussed system sizing and utility territory.,Atlas Admin
+60,2026-01-03,Site Review,Left voicemail and sent SMS.,Atlas Admin
+60,2026-01-18,Text,Reviewed roof suitability and project timeline.,Atlas Admin
+61,2025-11-10,Text,Discussed system sizing and utility territory.,Unassigned
+62,2026-02-18,Email,Followed up on estimated savings.,Unassigned
+62,2026-02-16,Email,Discussed system sizing and utility territory.,Unassigned
+62,2026-01-31,Call,Discussed system sizing and utility territory.,Unassigned
+62,2026-02-25,Call,Reviewed roof suitability and project timeline.,Unassigned
+62,2026-02-12,Proposal,Left voicemail and sent SMS.,Unassigned
+63,2026-03-31,Call,Followed up on estimated savings.,Unassigned
+63,2026-02-28,Call,Left voicemail and sent SMS.,Unassigned
+64,2025-12-24,Call,Reviewed roof suitability and project timeline.,Unassigned
+64,2025-10-12,Text,Discussed system sizing and utility territory.,Unassigned
+64,2025-12-29,Email,Followed up on estimated savings.,Unassigned
+64,2025-12-23,Proposal,Left voicemail and sent SMS.,Unassigned
+65,2025-11-03,Text,Reviewed roof suitability and project timeline.,Unassigned
+65,2025-10-04,Text,Shared proposal and financing overview.,Unassigned
+65,2025-12-06,Email,Followed up on estimated savings.,Unassigned
+65,2025-11-19,Site Review,Shared proposal and financing overview.,Unassigned
+65,2025-10-02,Proposal,Shared proposal and financing overview.,Unassigned
+66,2026-03-10,Proposal,Left voicemail and sent SMS.,Unassigned
+66,2026-03-18,Call,Followed up on estimated savings.,Unassigned
+66,2026-03-25,Text,Followed up on estimated savings.,Unassigned
+66,2026-04-25,Site Review,Shared proposal and financing overview.,Unassigned
+66,2026-03-14,Call,Shared proposal and financing overview.,Unassigned
+67,2026-01-05,Text,Followed up on estimated savings.,Unassigned
+67,2026-01-01,Call,Shared proposal and financing overview.,Unassigned
+68,2025-11-08,Proposal,Followed up on estimated savings.,Unassigned
+68,2025-12-27,Text,Followed up on estimated savings.,Unassigned
+68,2025-11-30,Email,Left voicemail and sent SMS.,Unassigned
+68,2025-11-26,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+68,2025-12-15,Call,Reviewed roof suitability and project timeline.,Unassigned
+69,2026-04-17,Proposal,Left voicemail and sent SMS.,Unassigned
+69,2026-04-21,Proposal,Left voicemail and sent SMS.,Unassigned
+69,2026-05-24,Text,Discussed system sizing and utility territory.,Unassigned
+70,2025-12-14,Email,Followed up on estimated savings.,Unassigned
+70,2025-12-03,Call,Reviewed roof suitability and project timeline.,Unassigned
+70,2025-11-06,Call,Left voicemail and sent SMS.,Unassigned
+70,2025-12-28,Site Review,Discussed system sizing and utility territory.,Unassigned
+70,2026-01-01,Proposal,Discussed system sizing and utility territory.,Unassigned
+71,2026-04-08,Site Review,Followed up on estimated savings.,Unassigned
+71,2026-04-19,Email,Discussed system sizing and utility territory.,Unassigned
+71,2026-02-18,Site Review,Followed up on estimated savings.,Unassigned
+71,2026-03-17,Site Review,Followed up on estimated savings.,Unassigned
+72,2025-11-15,Text,Reviewed roof suitability and project timeline.,Unassigned
+72,2025-10-15,Email,Followed up on estimated savings.,Unassigned
+72,2025-12-02,Call,Left voicemail and sent SMS.,Unassigned
+72,2025-11-25,Text,Discussed system sizing and utility territory.,Unassigned
+72,2025-10-05,Proposal,Shared proposal and financing overview.,Unassigned
+73,2026-02-21,Text,Left voicemail and sent SMS.,Atlas Admin
+73,2026-04-11,Site Review,Reviewed roof suitability and project timeline.,Atlas Admin
+73,2026-02-10,Email,Followed up on estimated savings.,Atlas Admin
+74,2026-01-27,Site Review,Reviewed roof suitability and project timeline.,Atlas Sales
+74,2025-12-09,Email,Reviewed roof suitability and project timeline.,Atlas Sales
+74,2025-12-15,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+74,2025-11-16,Text,Followed up on estimated savings.,Atlas Sales
+75,2025-12-25,Site Review,Followed up on estimated savings.,Unassigned
+75,2025-12-07,Call,Discussed system sizing and utility territory.,Unassigned
+75,2025-12-14,Text,Followed up on estimated savings.,Unassigned
+76,2026-01-29,Proposal,Followed up on estimated savings.,Unassigned
+76,2026-01-26,Site Review,Discussed system sizing and utility territory.,Unassigned
+76,2025-12-17,Text,Followed up on estimated savings.,Unassigned
+76,2025-12-17,Text,Left voicemail and sent SMS.,Unassigned
+77,2025-10-01,Site Review,Shared proposal and financing overview.,Unassigned
+77,2025-10-07,Email,Discussed system sizing and utility territory.,Unassigned
+78,2025-10-20,Site Review,Shared proposal and financing overview.,Unassigned
+78,2025-12-26,Email,Followed up on estimated savings.,Unassigned
+78,2025-10-23,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+78,2026-01-03,Email,Discussed system sizing and utility territory.,Unassigned
+79,2025-11-24,Proposal,Left voicemail and sent SMS.,Unassigned
+79,2025-12-09,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+79,2025-12-31,Text,Discussed system sizing and utility territory.,Unassigned
+79,2025-12-20,Text,Reviewed roof suitability and project timeline.,Unassigned
+80,2026-02-04,Site Review,Shared proposal and financing overview.,Atlas Sales
+80,2026-03-23,Site Review,Followed up on estimated savings.,Atlas Sales
+81,2025-12-21,Email,Followed up on estimated savings.,Unassigned
+81,2025-10-26,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+82,2026-02-04,Site Review,Discussed system sizing and utility territory.,Unassigned
+82,2026-03-05,Site Review,Left voicemail and sent SMS.,Unassigned
+82,2026-03-18,Email,Left voicemail and sent SMS.,Unassigned
+82,2026-01-18,Email,Discussed system sizing and utility territory.,Unassigned
+82,2026-03-19,Call,Discussed system sizing and utility territory.,Unassigned
+83,2026-04-27,Text,Shared proposal and financing overview.,Unassigned
+83,2026-04-05,Call,Reviewed roof suitability and project timeline.,Unassigned
+84,2026-03-18,Proposal,Left voicemail and sent SMS.,Unassigned
+84,2026-03-14,Text,Discussed system sizing and utility territory.,Unassigned
+84,2026-02-01,Site Review,Discussed system sizing and utility territory.,Unassigned
+84,2026-04-08,Text,Left voicemail and sent SMS.,Unassigned
+85,2026-03-03,Email,Followed up on estimated savings.,Unassigned
+85,2026-01-29,Email,Reviewed roof suitability and project timeline.,Unassigned
+85,2026-02-15,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+85,2026-02-03,Call,Left voicemail and sent SMS.,Unassigned
+85,2025-12-30,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+86,2026-04-09,Call,Followed up on estimated savings.,Atlas Admin
+86,2026-03-28,Proposal,Reviewed roof suitability and project timeline.,Atlas Admin
+86,2026-04-04,Email,Followed up on estimated savings.,Atlas Admin
+86,2026-03-06,Email,Left voicemail and sent SMS.,Atlas Admin
+86,2026-04-13,Call,Reviewed roof suitability and project timeline.,Atlas Admin
+87,2026-04-01,Call,Followed up on estimated savings.,Atlas Sales
+88,2026-02-11,Proposal,Followed up on estimated savings.,Unassigned
+88,2026-04-05,Text,Left voicemail and sent SMS.,Unassigned
+89,2026-03-03,Site Review,Followed up on estimated savings.,Unassigned
+89,2026-01-07,Call,Discussed system sizing and utility territory.,Unassigned
+89,2026-03-03,Proposal,Left voicemail and sent SMS.,Unassigned
+90,2026-03-07,Email,Shared proposal and financing overview.,Unassigned
+90,2026-02-02,Call,Shared proposal and financing overview.,Unassigned
+90,2026-03-12,Site Review,Discussed system sizing and utility territory.,Unassigned
+90,2026-03-14,Email,Reviewed roof suitability and project timeline.,Unassigned
+91,2026-01-13,Proposal,Left voicemail and sent SMS.,Atlas Sales
+91,2025-12-17,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+91,2025-12-21,Call,Left voicemail and sent SMS.,Atlas Sales
+91,2026-02-15,Site Review,Followed up on estimated savings.,Atlas Sales
+91,2026-01-15,Email,Reviewed roof suitability and project timeline.,Atlas Sales
+92,2026-01-17,Site Review,Followed up on estimated savings.,Atlas Sales
+92,2026-03-18,Text,Reviewed roof suitability and project timeline.,Atlas Sales
+92,2026-02-03,Site Review,Left voicemail and sent SMS.,Atlas Sales
+93,2025-11-12,Proposal,Followed up on estimated savings.,Unassigned
+94,2026-04-27,Email,Discussed system sizing and utility territory.,Unassigned
+94,2026-03-19,Email,Reviewed roof suitability and project timeline.,Unassigned
+95,2026-01-08,Text,Followed up on estimated savings.,Unassigned
+95,2026-02-23,Site Review,Shared proposal and financing overview.,Unassigned
+96,2025-10-04,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+96,2025-11-30,Call,Shared proposal and financing overview.,Unassigned
+97,2026-05-06,Call,Left voicemail and sent SMS.,Atlas Sales
+97,2026-03-20,Proposal,Left voicemail and sent SMS.,Atlas Sales
+98,2025-12-20,Call,Left voicemail and sent SMS.,Unassigned
+98,2026-02-02,Site Review,Discussed system sizing and utility territory.,Unassigned
+98,2025-12-28,Call,Left voicemail and sent SMS.,Unassigned
+98,2026-01-25,Email,Left voicemail and sent SMS.,Unassigned
+99,2026-02-04,Call,Discussed system sizing and utility territory.,Unassigned
+99,2026-03-02,Site Review,Discussed system sizing and utility territory.,Unassigned
+99,2026-01-18,Site Review,Left voicemail and sent SMS.,Unassigned
+99,2025-12-20,Call,Followed up on estimated savings.,Unassigned
+99,2026-01-11,Call,Discussed system sizing and utility territory.,Unassigned
+100,2026-04-03,Proposal,Left voicemail and sent SMS.,Atlas Admin
+100,2026-05-06,Text,Discussed system sizing and utility territory.,Atlas Admin
+100,2026-05-13,Call,Followed up on estimated savings.,Atlas Admin
+100,2026-06-17,Site Review,Left voicemail and sent SMS.,Atlas Admin
+101,2025-11-02,Site Review,Left voicemail and sent SMS.,Unassigned
+101,2025-10-05,Text,Reviewed roof suitability and project timeline.,Unassigned
+101,2025-08-28,Site Review,Left voicemail and sent SMS.,Unassigned
+102,2026-03-12,Site Review,Followed up on estimated savings.,Unassigned
+102,2026-05-05,Call,Followed up on estimated savings.,Unassigned
+102,2026-04-08,Email,Followed up on estimated savings.,Unassigned
+102,2026-05-23,Text,Discussed system sizing and utility territory.,Unassigned
+103,2026-02-15,Proposal,Followed up on estimated savings.,Unassigned
+103,2026-02-06,Text,Discussed system sizing and utility territory.,Unassigned
+103,2026-02-11,Call,Shared proposal and financing overview.,Unassigned
+104,2025-09-02,Email,Followed up on estimated savings.,Atlas Sales
+105,2025-12-30,Site Review,Discussed system sizing and utility territory.,Unassigned
+105,2025-12-26,Site Review,Left voicemail and sent SMS.,Unassigned
+105,2026-01-03,Email,Followed up on estimated savings.,Unassigned
+105,2025-12-09,Email,Shared proposal and financing overview.,Unassigned
+106,2026-03-31,Text,Reviewed roof suitability and project timeline.,Atlas Admin
+106,2026-04-05,Proposal,Followed up on estimated savings.,Atlas Admin
+107,2025-10-06,Site Review,Left voicemail and sent SMS.,Unassigned
+107,2025-10-12,Site Review,Followed up on estimated savings.,Unassigned
+107,2025-12-03,Call,Reviewed roof suitability and project timeline.,Unassigned
+107,2025-11-20,Proposal,Discussed system sizing and utility territory.,Unassigned
+107,2025-10-01,Site Review,Followed up on estimated savings.,Unassigned
+108,2026-01-13,Proposal,Followed up on estimated savings.,Atlas Sales
+109,2025-12-14,Site Review,Reviewed roof suitability and project timeline.,Atlas Sales
+109,2026-03-02,Site Review,Left voicemail and sent SMS.,Atlas Sales
+110,2026-04-03,Site Review,Reviewed roof suitability and project timeline.,Atlas Admin
+110,2026-06-04,Email,Shared proposal and financing overview.,Atlas Admin
+111,2025-12-07,Text,Discussed system sizing and utility territory.,Unassigned
+112,2025-12-09,Text,Discussed system sizing and utility territory.,Unassigned
+112,2025-12-08,Email,Reviewed roof suitability and project timeline.,Unassigned
+112,2025-12-06,Email,Left voicemail and sent SMS.,Unassigned
+112,2025-12-05,Email,Discussed system sizing and utility territory.,Unassigned
+112,2026-01-18,Email,Discussed system sizing and utility territory.,Unassigned
+113,2026-01-16,Text,Left voicemail and sent SMS.,Unassigned
+114,2026-04-27,Email,Followed up on estimated savings.,Atlas Sales
+114,2026-05-13,Site Review,Followed up on estimated savings.,Atlas Sales
+114,2026-03-04,Call,Reviewed roof suitability and project timeline.,Atlas Sales
+114,2026-03-20,Site Review,Discussed system sizing and utility territory.,Atlas Sales
+114,2026-02-24,Text,Left voicemail and sent SMS.,Atlas Sales
+115,2025-10-11,Email,Shared proposal and financing overview.,Unassigned
+116,2026-02-12,Call,Discussed system sizing and utility territory.,Unassigned
+116,2026-03-25,Email,Reviewed roof suitability and project timeline.,Unassigned
+116,2026-04-06,Text,Followed up on estimated savings.,Unassigned
+116,2026-02-01,Proposal,Shared proposal and financing overview.,Unassigned
+116,2026-03-04,Email,Followed up on estimated savings.,Unassigned
+117,2026-05-31,Email,Followed up on estimated savings.,Unassigned
+117,2026-05-14,Text,Followed up on estimated savings.,Unassigned
+117,2026-07-03,Email,Followed up on estimated savings.,Unassigned
+118,2026-04-09,Text,Left voicemail and sent SMS.,Atlas Admin
+118,2026-05-06,Text,Followed up on estimated savings.,Atlas Admin
+118,2026-03-14,Call,Reviewed roof suitability and project timeline.,Atlas Admin
+119,2026-04-01,Call,Reviewed roof suitability and project timeline.,Unassigned
+119,2026-02-11,Site Review,Shared proposal and financing overview.,Unassigned
+119,2026-02-18,Proposal,Followed up on estimated savings.,Unassigned
+119,2026-04-23,Email,Reviewed roof suitability and project timeline.,Unassigned
+119,2026-04-29,Text,Reviewed roof suitability and project timeline.,Unassigned
+120,2026-01-19,Text,Reviewed roof suitability and project timeline.,Unassigned
+120,2025-11-01,Text,Shared proposal and financing overview.,Unassigned
+120,2025-12-10,Site Review,Reviewed roof suitability and project timeline.,Unassigned
+121,2025-12-25,Email,Reviewed roof suitability and project timeline.,Unassigned
+122,2026-02-11,Call,Reviewed roof suitability and project timeline.,Atlas Sales
+122,2026-02-05,Site Review,Followed up on estimated savings.,Atlas Sales
+122,2026-01-27,Site Review,Shared proposal and financing overview.,Atlas Sales
+122,2026-03-03,Site Review,Left voicemail and sent SMS.,Atlas Sales
+123,2025-10-26,Call,Shared proposal and financing overview.,Unassigned
+123,2025-11-12,Site Review,Followed up on estimated savings.,Unassigned
+124,2026-05-23,Text,Shared proposal and financing overview.,Unassigned
+124,2026-03-26,Email,Discussed system sizing and utility territory.,Unassigned
+124,2026-04-10,Email,Shared proposal and financing overview.,Unassigned
+124,2026-03-26,Call,Followed up on estimated savings.,Unassigned
+124,2026-04-23,Site Review,Left voicemail and sent SMS.,Unassigned
+125,2025-11-25,Call,Reviewed roof suitability and project timeline.,Unassigned
+125,2025-12-19,Call,Shared proposal and financing overview.,Unassigned
+125,2026-01-29,Site Review,Followed up on estimated savings.,Unassigned
+126,2026-06-13,Email,Left voicemail and sent SMS.,Unassigned
+126,2026-06-04,Site Review,Shared proposal and financing overview.,Unassigned
+126,2026-04-11,Site Review,Left voicemail and sent SMS.,Unassigned
+126,2026-05-28,Email,Followed up on estimated savings.,Unassigned
+126,2026-05-07,Proposal,Left voicemail and sent SMS.,Unassigned
+127,2026-04-17,Call,Left voicemail and sent SMS.,Unassigned
+127,2026-04-03,Email,Followed up on estimated savings.,Unassigned
+127,2026-05-13,Call,Discussed system sizing and utility territory.,Unassigned
+127,2026-03-18,Site Review,Shared proposal and financing overview.,Unassigned
+128,2026-02-24,Text,Reviewed roof suitability and project timeline.,Unassigned
+128,2026-01-24,Proposal,Left voicemail and sent SMS.,Unassigned
+128,2026-02-08,Site Review,Discussed system sizing and utility territory.,Unassigned
+128,2026-02-11,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+129,2025-09-14,Call,Shared proposal and financing overview.,Atlas Admin
+129,2025-11-13,Site Review,Left voicemail and sent SMS.,Atlas Admin
+130,2025-12-02,Site Review,Left voicemail and sent SMS.,Unassigned
+130,2025-11-13,Site Review,Followed up on estimated savings.,Unassigned
+130,2025-09-22,Email,Discussed system sizing and utility territory.,Unassigned
+130,2025-11-08,Text,Followed up on estimated savings.,Unassigned
+131,2026-01-13,Proposal,Followed up on estimated savings.,Unassigned
+131,2025-11-15,Email,Followed up on estimated savings.,Unassigned
+131,2025-12-20,Proposal,Followed up on estimated savings.,Unassigned
+131,2025-11-16,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+132,2026-01-28,Call,Shared proposal and financing overview.,Unassigned
+132,2026-04-23,Call,Left voicemail and sent SMS.,Unassigned
+133,2025-10-27,Text,Left voicemail and sent SMS.,Atlas Sales
+133,2025-11-21,Email,Followed up on estimated savings.,Atlas Sales
+134,2026-01-15,Text,Left voicemail and sent SMS.,Atlas Sales
+134,2025-12-09,Proposal,Discussed system sizing and utility territory.,Atlas Sales
+134,2025-12-26,Email,Discussed system sizing and utility territory.,Atlas Sales
+135,2025-12-30,Email,Shared proposal and financing overview.,Atlas Admin
+135,2025-12-02,Proposal,Shared proposal and financing overview.,Atlas Admin
+135,2025-11-29,Text,Discussed system sizing and utility territory.,Atlas Admin
+135,2025-11-03,Email,Left voicemail and sent SMS.,Atlas Admin
+135,2025-12-20,Email,Discussed system sizing and utility territory.,Atlas Admin
+136,2026-03-30,Email,Discussed system sizing and utility territory.,Atlas Admin
+136,2026-02-24,Proposal,Followed up on estimated savings.,Atlas Admin
+136,2026-05-02,Text,Reviewed roof suitability and project timeline.,Atlas Admin
+137,2026-03-26,Proposal,Followed up on estimated savings.,Atlas Admin
+137,2026-02-20,Proposal,Reviewed roof suitability and project timeline.,Atlas Admin
+137,2026-03-07,Text,Reviewed roof suitability and project timeline.,Atlas Admin
+137,2026-03-07,Proposal,Left voicemail and sent SMS.,Atlas Admin
+137,2026-03-06,Text,Followed up on estimated savings.,Atlas Admin
+138,2025-11-05,Email,Shared proposal and financing overview.,Unassigned
+138,2025-10-13,Text,Shared proposal and financing overview.,Unassigned
+138,2025-11-08,Text,Shared proposal and financing overview.,Unassigned
+138,2025-12-30,Text,Followed up on estimated savings.,Unassigned
+139,2026-01-28,Email,Discussed system sizing and utility territory.,Unassigned
+140,2026-04-06,Site Review,Reviewed roof suitability and project timeline.,Atlas Sales
+140,2026-03-22,Text,Followed up on estimated savings.,Atlas Sales
+140,2026-02-01,Site Review,Left voicemail and sent SMS.,Atlas Sales
+140,2026-04-04,Call,Followed up on estimated savings.,Atlas Sales
+140,2026-01-22,Call,Shared proposal and financing overview.,Atlas Sales
+141,2026-04-01,Call,Shared proposal and financing overview.,Unassigned
+141,2026-04-08,Proposal,Left voicemail and sent SMS.,Unassigned
+141,2026-04-15,Proposal,Discussed system sizing and utility territory.,Unassigned
+142,2026-04-08,Email,Discussed system sizing and utility territory.,Unassigned
+142,2026-06-09,Site Review,Left voicemail and sent SMS.,Unassigned
+142,2026-04-08,Call,Left voicemail and sent SMS.,Unassigned
+142,2026-06-20,Email,Reviewed roof suitability and project timeline.,Unassigned
+142,2026-04-03,Call,Left voicemail and sent SMS.,Unassigned
+143,2026-03-09,Text,Followed up on estimated savings.,Atlas Sales
+143,2026-01-24,Proposal,Discussed system sizing and utility territory.,Atlas Sales
+143,2026-04-03,Proposal,Reviewed roof suitability and project timeline.,Atlas Sales
+144,2026-02-11,Site Review,Left voicemail and sent SMS.,Atlas Admin
+144,2025-12-28,Call,Followed up on estimated savings.,Atlas Admin
+144,2025-12-14,Proposal,Followed up on estimated savings.,Atlas Admin
+144,2026-01-27,Email,Left voicemail and sent SMS.,Atlas Admin
+144,2025-12-27,Call,Followed up on estimated savings.,Atlas Admin
+145,2026-01-20,Proposal,Left voicemail and sent SMS.,Atlas Admin
+146,2025-11-27,Email,Shared proposal and financing overview.,Unassigned
+146,2025-12-22,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+147,2026-01-30,Proposal,Discussed system sizing and utility territory.,Atlas Sales
+147,2026-01-16,Text,Followed up on estimated savings.,Atlas Sales
+147,2026-03-10,Proposal,Followed up on estimated savings.,Atlas Sales
+147,2026-02-25,Site Review,Reviewed roof suitability and project timeline.,Atlas Sales
+147,2026-01-18,Site Review,Left voicemail and sent SMS.,Atlas Sales
+148,2025-09-15,Text,Left voicemail and sent SMS.,Atlas Admin
+148,2025-11-23,Call,Followed up on estimated savings.,Atlas Admin
+149,2026-02-10,Text,Followed up on estimated savings.,Atlas Admin
+149,2025-12-18,Proposal,Reviewed roof suitability and project timeline.,Atlas Admin
+149,2026-02-09,Proposal,Discussed system sizing and utility territory.,Atlas Admin
+150,2025-11-21,Email,Followed up on estimated savings.,Unassigned
+150,2025-11-03,Call,Left voicemail and sent SMS.,Unassigned
+150,2025-10-03,Email,Left voicemail and sent SMS.,Unassigned
+151,2025-10-10,Email,Reviewed roof suitability and project timeline.,Unassigned
+151,2025-10-11,Proposal,Left voicemail and sent SMS.,Unassigned
+152,2026-07-05,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+152,2026-06-15,Proposal,Followed up on estimated savings.,Unassigned
+152,2026-04-19,Site Review,Left voicemail and sent SMS.,Unassigned
+152,2026-06-28,Text,Left voicemail and sent SMS.,Unassigned
+153,2026-03-30,Proposal,Followed up on estimated savings.,Unassigned
+153,2026-03-23,Email,Left voicemail and sent SMS.,Unassigned
+153,2026-01-14,Call,Followed up on estimated savings.,Unassigned
+153,2026-01-23,Proposal,Left voicemail and sent SMS.,Unassigned
+154,2025-11-11,Call,Followed up on estimated savings.,Atlas Admin
+154,2025-10-29,Email,Followed up on estimated savings.,Atlas Admin
+154,2026-01-21,Call,Followed up on estimated savings.,Atlas Admin
+155,2026-04-11,Text,Left voicemail and sent SMS.,Unassigned
+156,2026-02-18,Call,Reviewed roof suitability and project timeline.,Unassigned
+156,2025-12-08,Email,Left voicemail and sent SMS.,Unassigned
+156,2025-12-21,Call,Followed up on estimated savings.,Unassigned
+156,2025-11-29,Call,Discussed system sizing and utility territory.,Unassigned
+156,2026-01-25,Call,Left voicemail and sent SMS.,Unassigned
+157,2026-03-11,Email,Discussed system sizing and utility territory.,Unassigned
+158,2026-05-21,Site Review,Discussed system sizing and utility territory.,Unassigned
+158,2026-04-10,Text,Discussed system sizing and utility territory.,Unassigned
+158,2026-05-14,Call,Discussed system sizing and utility territory.,Unassigned
+159,2026-06-14,Proposal,Reviewed roof suitability and project timeline.,Unassigned
+159,2026-05-04,Proposal,Followed up on estimated savings.,Unassigned
+159,2026-05-20,Call,Reviewed roof suitability and project timeline.,Unassigned
+160,2025-10-22,Text,Reviewed roof suitability and project timeline.,Unassigned
+160,2026-01-08,Call,Shared proposal and financing overview.,Unassigned
+160,2025-12-21,Email,Followed up on estimated savings.,Unassigned
+160,2025-12-22,Text,Left voicemail and sent SMS.,Unassigned
+160,2025-12-04,Call,Shared proposal and financing overview.,Unassigned
